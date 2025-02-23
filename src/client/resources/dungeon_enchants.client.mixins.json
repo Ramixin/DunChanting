@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "package": "net.ramgames.dunchants.mixins.client",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "BakedModelManagerMixin",
+    "EnchantmentScreenMixin",
+    "HandledScreenMixin",
+    "InGameHudMixin",
+    "SpriteAtlasTextureMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}

@@ -1,0 +1,14 @@
+{
+  "required": true,
+  "package": "net.ramgames.dunchants.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "EnchantmentScreenHandlerMixin",
+    "LivingEntityMixin",
+    "PlayerEntityMixin",
+    "PlayerManagerMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}

@@ -1,0 +1,9 @@
+{
+  "sources": [
+    {
+      "type": "directory",
+      "source": "enchantment_icons",
+      "prefix": ""
+    }
+  ]
+}

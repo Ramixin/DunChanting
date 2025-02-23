@@ -1,0 +1,10 @@
+
+{
+  "sources": [
+    {
+      "type": "directory",
+      "source": "large_enchantment_icons",
+      "prefix": ""
+    }
+  ]
+}
