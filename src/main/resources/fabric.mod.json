@@ -16,10 +16,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-			"net.ramgames.dunchants.DungeonEnchants"
+			"net.ramixin.dunchants.DungeonEnchants"
 		],
 		"client": [
-			"net.ramgames.dunchants.DungeonEnchantsClient"
+			"net.ramixin.dunchants.client.DungeonEnchantsClient"
 		]
 	},
 	"mixins": [
@@ -37,5 +37,10 @@
 	},
 	"suggests": {
 		"another-mod": "*"
+	},
+	"custom": {
+		"mixson": [
+			"net.ramixin.dunchants.client.ModMixsonClient"
+		]
 	}
 }

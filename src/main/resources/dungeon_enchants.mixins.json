@@ -1,6 +1,6 @@
 {
   "required": true,
-  "package": "net.ramgames.dunchants.mixins",
+  "package": "net.ramixin.dunchants.client.mixins",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
     "EnchantmentScreenHandlerMixin",
