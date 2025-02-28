@@ -3,6 +3,7 @@ package net.ramixin.dunchants;
 import net.fabricmc.api.ModInitializer;
 
 import net.minecraft.util.Identifier;
+import net.ramixin.dunchants.items.ModItemComponents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

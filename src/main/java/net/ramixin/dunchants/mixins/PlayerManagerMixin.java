@@ -1,4 +1,4 @@
-package net.ramixin.dunchants.client.mixins;
+package net.ramixin.dunchants.mixins;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.entity.Entity;

@@ -15,8 +15,10 @@ import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
 import net.ramixin.dunchants.DungeonEnchantsUtils;
-import net.ramixin.dunchants.ModItemComponents;
 import net.ramixin.dunchants.client.DungeonEnchantsClient;
+import net.ramixin.dunchants.items.components.EnchantmentOption;
+import net.ramixin.dunchants.items.components.EnchantmentOptions;
+import net.ramixin.dunchants.items.components.SelectedEnchantments;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -72,7 +74,10 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
     private static final Identifier locked_enchantment_big = DungeonEnchants.id("container/enchanting_table/locked");
 
     @Unique
-    private List<List<String>> cachedOptions = null;
+    private EnchantmentOptions cachedOptions = null;
+
+    @Unique
+    private SelectedEnchantments cachedSelections = null;
 
     @Unique
     private static final SpriteIdentifier missingno_icon = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.ofVanilla("missingno"));
@@ -85,6 +90,8 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
     @Inject(method = "<init>", at = @At("TAIL"))
     private void changeBackgroundHeight(EnchantmentScreenHandler handler, PlayerInventory inventory, Text title, CallbackInfo ci) {
         this.backgroundHeight = 173;
+        cachedOptions = DungeonEnchantsUtils.getOptions(stack);
+        cachedSelections = DungeonEnchantsUtils.getSelectedEnchantments(stack);
     }
 
     @Inject(method = "drawBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V", ordinal = 0, shift = At.Shift.AFTER), cancellable = true)
@@ -93,67 +100,76 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
         if(this.client == null || this.client.world == null) return;
         int relX = (this.width - this.backgroundWidth) / 2;
         int relY = (this.height - this.backgroundHeight) / 2;
-        if(stack.get(ModItemComponents.ENCHANTMENT_OPTIONS) != cachedOptions)
-            if(DungeonEnchantsUtils.containsImproperComponent(stack, MinecraftClient.getInstance().world)) return;
-        cachedOptions = stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
-        List<List<String>> enchantmentOptions = this.stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
-        if(enchantmentOptions == null) return;
+        EnchantmentOptions stackOptions = DungeonEnchantsUtils.getOptions(stack);
+        if(stackOptions != cachedOptions) {
+            if(DungeonEnchantsUtils.hasInvalidOptions(stack, MinecraftClient.getInstance().world)) return;
+            cachedOptions = stackOptions;
+        }
+        SelectedEnchantments stackSelections = DungeonEnchantsUtils.getSelectedEnchantments(stack);
+        if(stackSelections != cachedSelections) {
+            cachedSelections = stackSelections;
+        }
+
         for(int i = 0; i < 3; i++) {
-            List<String> enchants = enchantmentOptions.get(i);
-            if(DungeonEnchantsUtils.isOptionEnchanted(stack, this.client.world, i, cachedOptions)) {
+            if(cachedSelections.hasSelection(i)) {
                 context.drawGuiTexture(selectionIcons[14], relX - 1 + 57 * i, relY + 19, 64, 64);
-                String enchant = enchants.getFirst();
-                Optional<RegistryEntry.Reference<Enchantment>> enchantment = this.client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant));
-                if(enchantment.isEmpty()) continue;
+                int enchantIndex = cachedSelections.get(i);
+                String enchant = cachedOptions.get(i).get(enchantIndex);
+                Optional<RegistryEntry.Reference<Enchantment>> maybeEnchant = this.client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant));
+                if(maybeEnchant.isEmpty()) continue;
+                RegistryEntry.Reference<Enchantment> enchantment = maybeEnchant.get();
                 SpriteIdentifier spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.of(enchant).withPrefixedPath("large/"));
                 if(spriteId.getSprite() == missingno_icon.getSprite()) spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.ofVanilla("large/unknown"));
                 context.drawSprite(relX - 1 + 57 * i, relY + 19, 0, 64, 64, spriteId.getSprite());
-                if(!isHovering[3 * i]) continue;
-                context.drawTooltip(this.textRenderer, List.of(enchantment.orElseThrow().value().description()), mouseX, mouseY);
+                if(!isHovering[3 * i + enchantIndex]) continue;
+                context.drawTooltip(this.textRenderer, List.of(enchantment.value().description()), mouseX, mouseY);
             }
-            else if(enchants.getFirst().equals("locked")) {
-                context.drawGuiTexture(locked_enchantment_big, relX - 1 + 57 * i, relY + 19, 64, 64);
-            } else {
+            else if(cachedOptions.isLocked(i)) context.drawGuiTexture(locked_enchantment_big, relX - 1 + 57 * i, relY + 19, 64, 64);
+            else {
+                EnchantmentOption option = cachedOptions.get(i);
                 context.drawGuiTexture(roman_numerals[i], relX + 23 + 57 * i, relY + 29, 16, 16);
                 for(int l = 0; l < 3; l++) {
-                    String enchant = enchants.get(l);
                     int x = (int) (relX + (-21 * Math.pow(l, 2) + 49 * l - 15)) + 57 * i;
                     int y = (l == 2 ? 34 : 19) + relY;
-                    context.drawGuiTexture(enchant.equals("locked") ? locked_enchantment : selectionIcons[animationProgresses[3 * i + l] / 2], x, y, 64, 64);
-                    if(enchant.equals("locked")) continue;
+                    context.drawGuiTexture(option.isLocked(l) ? locked_enchantment : selectionIcons[animationProgresses[3 * i + l] / 2], x, y, 64, 64);
+                    if(option.isLocked(l)) continue;
+                    String enchant = option.get(l);
                     Optional<RegistryEntry.Reference<Enchantment>> enchantment = this.client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant));
                     SpriteIdentifier spriteId = getEnchantmentIcon(enchant, 0);
                     context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());
-                    if(isHovering[3 * i + l]) context.drawTooltip(this.textRenderer, List.of(enchantment.orElseThrow().value().description()), mouseX, mouseY);
+                    if(isHovering[3 * i + l])
+                        context.drawTooltip(this.textRenderer, List.of(enchantment.orElseThrow().value().description()), mouseX, mouseY);
                 }
             }
         }
-        for(int i = 0; i < 9; i++) if(animationProgresses[i] > 0) {
-            if(enchantmentOptions.get(i/3).getFirst().equals("locked")) continue;
-            if(enchantmentOptions.get(i/3).size() == 1) continue;
 
-            String enchant = enchantmentOptions.get(i / 3).get(i % 3);
-            if(enchant.equals("locked")) continue;
-            int x = (int) (relX + (-21 * Math.pow(i % 3, 2) + 49 * (i % 3) - 15)) + 57 * (i / 3);
-            int y = (i % 3 == 2 ? 34 : 19) + relY;
-            context.drawGuiTexture(selectionIcons[animationProgresses[i] / 2], x, y, 64, 64);
-            SpriteIdentifier spriteId = getEnchantmentIcon(enchant, animationProgresses[i] / 2);
-            context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());
+        for(int i = 0; i < 3; i++) {
+            if(cachedOptions.isLocked(i)) continue;
+            if(cachedSelections.hasSelection(i)) continue;
+            EnchantmentOption option = cachedOptions.get(i);
+            for(int l = 0; l < 3; l++) {
+                if(option.isLocked(l)) continue;
+                if(animationProgresses[3 * i + l] <= 0) continue;
+                int x = (int) (relX + (-21 * Math.pow(l , 2) + 49 * l - 15)) + 57 * i;
+                int y = (l == 2 ? 34 : 19) + relY;
+                context.drawGuiTexture(selectionIcons[animationProgresses[3 * i + l] / 2], x, y, 64, 64);
+                SpriteIdentifier spriteId = getEnchantmentIcon(option.get(l), animationProgresses[3 * i + l] / 2);
+                context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());
+            }
         }
     }
 
     @Override
     public void mouseMoved(double x, double y) {
-        if(cachedOptions == null) return;
         int relX = (this.width - this.backgroundWidth) / 2;
         int relY = (this.height - this.backgroundHeight) / 2;
         for(int i = 0; i < 3; i++) {
-            if(cachedOptions.get(i).size() == 1) {
+            if(cachedSelections.hasSelection(i)) {
                 int slotX = relX - 1 + 57 * i;
                 int slotY = relY + 19;
-                isHovering[3 * i] = Math.abs(x - slotX - 32) + Math.abs(y - slotY - 32) <= 24;
-                isHovering[3 * i + 1] = false;
-                isHovering[3 * i + 2] = false;
+                for(int l = 0; l < 3; l++)
+                    if(l == cachedSelections.get(i)) isHovering[3 * i + l] = Math.abs(x - slotX - 32) + Math.abs(y - slotY - 32) <= 24;
+                    else isHovering[3 * i + l] = false;
                 continue;
             }
             for (int l = 0; l < 3; l++) {
@@ -198,7 +214,7 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
     private void applyEnchantmentOnClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(super.mouseClicked(mouseX, mouseY, button));
         if(this.client == null || this.client.interactionManager == null) return;
-        if(DungeonEnchantsUtils.containsImproperComponent(stack, this.client.world)) return;
+        if(DungeonEnchantsUtils.hasInvalidOptions(stack, this.client.world)) return;
         for(int i = 0; i < 9; i++) if(isHovering[i]) {
             this.handler.onButtonClick(this.client.player, i);
             this.client.interactionManager.clickButton(this.handler.syncId, i);

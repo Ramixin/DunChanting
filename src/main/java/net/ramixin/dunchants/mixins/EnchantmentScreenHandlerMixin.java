@@ -1,9 +1,10 @@
-package net.ramixin.dunchants.client.mixins;
+package net.ramixin.dunchants.mixins;
 
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
@@ -16,10 +17,12 @@ import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.ramixin.dunchants.DungeonEnchantsUtils;
-import net.ramixin.dunchants.ModItemComponents;
+import net.ramixin.dunchants.items.ModItemComponents;
+import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyArg;
@@ -40,6 +43,13 @@ public abstract class EnchantmentScreenHandlerMixin {
     @Shadow public abstract void onContentChanged(Inventory inventory);
 
     @Shadow @Final private Property seed;
+
+    @Unique private int playerLevel;
+
+    @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At("TAIL"))
+    private void setPlayerLevel(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, CallbackInfo ci) {
+        playerLevel = playerInventory.player.experienceLevel;
+    }
 
     @ModifyArgs(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/EnchantmentScreenHandler$2;<init>(Lnet/minecraft/screen/EnchantmentScreenHandler;Lnet/minecraft/inventory/Inventory;III)V"))
     private void moveItemSlot(Args args) {
@@ -64,31 +74,27 @@ public abstract class EnchantmentScreenHandlerMixin {
         if(inventory != this.inventory) return;
         ItemStack stack = inventory.getStack(0);
         this.context.run((world, pos) -> {
-            if(DungeonEnchantsUtils.containsImproperComponent(stack, world))
-                inventory.getStack(0).set(ModItemComponents.ENCHANTMENT_OPTIONS, DungeonEnchantsUtils.generateComponent(stack, world));
+            if(!stack.isEmpty()) DungeonEnchantsUtils.updateOptionsIfInvalid(stack, world, playerLevel);
         });
 
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Inject(method = "onButtonClick", at = @At("HEAD"), cancellable = true)
     private void enchantItemOnButtonClick(PlayerEntity player, int id, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(true);
         ItemStack stack = this.inventory.getStack(0);
-        if(stack.get(ModItemComponents.ENCHANTMENT_OPTIONS) == null) return;
-        List<List<String>> enchantmentOptions = stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
-        if(enchantmentOptions.get(id/3).getFirst().equals("locked")) return;
-        String enchantId;
-        if(enchantmentOptions.get(id/3).size() == 1) enchantId = enchantmentOptions.get(id/3).getFirst();
-        else enchantId = enchantmentOptions.get(id/3).get(id % 3);
-        if(enchantId.equals("locked")) return;
-        Optional<RegistryEntry.Reference<Enchantment>> optionalEnchantment = player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchantId));
+        EnchantmentOptions options = stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
+        if(options == null) return;
+        if(options.isLocked(id / 3)) return;
+        Optional<String> enchant = options.get(id / 3).getOptional(id % 3);
+        if(enchant.isEmpty()) return;
+        Optional<RegistryEntry.Reference<Enchantment>> optionalEnchantment = player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant.get()));
         if(optionalEnchantment.isEmpty()) return;
         RegistryEntry.Reference<Enchantment> enchantment = optionalEnchantment.get();
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
         builder.set(enchantment, builder.getLevel(enchantment)+1);
         stack.set(DataComponentTypes.ENCHANTMENTS, builder.build());
-        stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, DungeonEnchantsUtils.enchantEnchantmentOption(id/3, id%3, stack.get(ModItemComponents.ENCHANTMENT_OPTIONS)));
+        DungeonEnchantsUtils.enchantEnchantmentOption(stack, id/3, id % 3);
         this.inventory.markDirty();
         this.seed.set(player.getEnchantmentTableSeed());
         this.onContentChanged(this.inventory);

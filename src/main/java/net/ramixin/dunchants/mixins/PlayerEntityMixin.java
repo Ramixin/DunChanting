@@ -1,4 +1,4 @@
-package net.ramixin.dunchants.client.mixins;
+package net.ramixin.dunchants.mixins;
 
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import net.minecraft.entity.player.PlayerEntity;
