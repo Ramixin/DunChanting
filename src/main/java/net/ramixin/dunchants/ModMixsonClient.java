@@ -1,14 +1,12 @@
-package net.ramixin.dunchants.client;
+package net.ramixin.dunchants;
 
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
-import net.ramixin.dunchants.DungeonEnchants;
 import net.ramixin.mixson.atp.annotations.Codec;
 import net.ramixin.mixson.atp.annotations.events.MixsonEvent;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import net.ramixin.mixson.inline.MixsonCodec;
-
 import net.ramixin.mixson.inline.ResourceReference;
 
 import javax.imageio.ImageIO;
@@ -38,7 +36,7 @@ public class ModMixsonClient {
             },
             BufferedImage::toString);
 
-    @MixsonEvent(value = "textures/enchantments/large*", codec = "bufferedImageCodec")
+    @MixsonEvent(value = "textures/enchantment/large*", codec = "bufferedImageCodec")
     private static void FindAllLargeEnchantmentIcons(EventContext<BufferedImage> context) {
         String large_id = context.getResourceId().toString().split("\\.")[0];
         String small_id = large_id.replace("large", "small");
@@ -48,7 +46,7 @@ public class ModMixsonClient {
                 "generate transition textures",
                 context2 -> generateInBetweenTextures(context2, small_id),
                 true,
-                new ResourceReference(Mixson.DEFAULT_PRIORITY - 100, small_id, small_id)
+                new ResourceReference(Mixson.DEFAULT_PRIORITY, small_id, small_id)
         );
     }
 

@@ -2,7 +2,7 @@
   "sources": [
     {
       "type": "directory",
-      "source": "enchantments",
+      "source": "enchantment",
       "prefix": ""
     }
   ]

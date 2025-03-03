@@ -9,9 +9,7 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.screen.EnchantmentScreenHandler;
-import net.minecraft.screen.Property;
-import net.minecraft.screen.ScreenHandlerContext;
+import net.minecraft.screen.*;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
@@ -19,22 +17,22 @@ import net.minecraft.util.math.BlockPos;
 import net.ramixin.dunchants.DungeonEnchantsUtils;
 import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
 
-import java.util.*;
+import java.util.Optional;
 
 @Mixin(EnchantmentScreenHandler.class)
-public abstract class EnchantmentScreenHandlerMixin {
+public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
 
     @Shadow @Final private Inventory inventory;
 
@@ -45,6 +43,11 @@ public abstract class EnchantmentScreenHandlerMixin {
     @Shadow @Final private Property seed;
 
     @Unique private int playerLevel;
+
+    protected EnchantmentScreenHandlerMixin(@Nullable ScreenHandlerType<?> type, int syncId) {
+        super(type, syncId);
+    }
+
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At("TAIL"))
     private void setPlayerLevel(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, CallbackInfo ci) {
@@ -61,11 +64,6 @@ public abstract class EnchantmentScreenHandlerMixin {
     private void moveLapizSlot(Args args) {
         args.set(3, 108);
         args.set(4, 14);
-    }
-
-    @ModifyArg(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/Slot;<init>(Lnet/minecraft/inventory/Inventory;III)V"), index = 3)
-    private int moveAllSlotsDown(int y) {
-        return y+8;
     }
 
     @Inject(method = "onContentChanged", at = @At("HEAD"), cancellable = true)
@@ -88,7 +86,7 @@ public abstract class EnchantmentScreenHandlerMixin {
         if(options.isLocked(id / 3)) return;
         Optional<String> enchant = options.get(id / 3).getOptional(id % 3);
         if(enchant.isEmpty()) return;
-        Optional<RegistryEntry.Reference<Enchantment>> optionalEnchantment = player.getWorld().getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant.get()));
+        Optional<RegistryEntry.Reference<Enchantment>> optionalEnchantment = player.getWorld().getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant.get()));
         if(optionalEnchantment.isEmpty()) return;
         RegistryEntry.Reference<Enchantment> enchantment = optionalEnchantment.get();
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
@@ -96,7 +94,7 @@ public abstract class EnchantmentScreenHandlerMixin {
         stack.set(DataComponentTypes.ENCHANTMENTS, builder.build());
         DungeonEnchantsUtils.enchantEnchantmentOption(stack, id/3, id % 3);
         this.inventory.markDirty();
-        this.seed.set(player.getEnchantmentTableSeed());
+        this.seed.set(player.getEnchantingTableSeed());
         this.onContentChanged(this.inventory);
         player.getWorld().playSound(null, BlockPos.ofFloored(player.getPos()), SoundEvents.BLOCK_ENCHANTMENT_TABLE_USE, SoundCategory.BLOCKS, 1.0F, player.getWorld().getRandom().nextFloat() * 0.1F + 0.9F);
     }

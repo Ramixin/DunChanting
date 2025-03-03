@@ -5,11 +5,8 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
-import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.world.World;
 import net.ramixin.dunchants.DungeonEnchantsUtils;
 
@@ -46,10 +43,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
     }
 
     public boolean isInvalid(ItemStack stack, World world) {
-        Registry<Enchantment> enchantmentRegistry = world.getRegistryManager().get(RegistryKeys.ENCHANTMENT);
-        Optional<RegistryEntryList.Named<Enchantment>> optional = enchantmentRegistry.getEntryList(EnchantmentTags.IN_ENCHANTING_TABLE);
-        if(optional.isEmpty()) return true;
-        List<RegistryEntry<Enchantment>> enchantList = new ArrayList<>(optional.get().stream().filter(entry -> entry.value().isSupportedItem(stack)).toList());
+        List<RegistryEntry<Enchantment>> enchantList = DungeonEnchantsUtils.getPossibleEnchantments(world.getRegistryManager(), stack);
         if(enchantList.size() <= 1) return true;
         for (int i = 0; i < 3; i++) {
             if(isLocked(i)) continue;
@@ -57,7 +51,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
             for(int j = 0; j < 3; j++) {
                 if(option.isLocked(j)) continue;
                 String enchant = option.get(j);
-                if(enchantmentIsInvalid(enchant, enchantmentRegistry, enchantList)) return true;
+                if(enchantmentIsInvalid(enchant, world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT), enchantList)) return true;
             }
         }
         return false;

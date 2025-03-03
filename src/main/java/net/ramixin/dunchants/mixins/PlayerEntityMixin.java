@@ -18,12 +18,12 @@ public class PlayerEntityMixin {
         cir.setReturnValue((int) (50 * Math.pow(1.25, experienceLevel)));
     }
 
-    @ModifyReturnValue(method = "shouldAlwaysDropXp", at = @At("RETURN"))
+    @ModifyReturnValue(method = "shouldAlwaysDropExperience", at = @At("RETURN"))
     private boolean changeShouldAlwaysDropXp(boolean original) {
         return true;
     }
 
-    @ModifyReturnValue(method = "getXpToDrop", at = @At("RETURN"))
+    @ModifyReturnValue(method = "getExperienceToDrop", at = @At("RETURN"))
     private int preventXpOrbsFromDropping(int original) {
         return 0;
     }

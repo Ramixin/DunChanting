@@ -4,6 +4,7 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.EnchantmentScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
+import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.player.PlayerInventory;
@@ -94,7 +95,7 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
         cachedSelections = DungeonEnchantsUtils.getSelectedEnchantments(stack);
     }
 
-    @Inject(method = "drawBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V", ordinal = 0, shift = At.Shift.AFTER), cancellable = true)
+    @Inject(method = "drawBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIII)V", ordinal = 0, shift = At.Shift.AFTER), cancellable = true)
     private void preventRendering(DrawContext context, float delta, int mouseX, int mouseY, CallbackInfo ci) {
         ci.cancel();
         if(this.client == null || this.client.world == null) return;
@@ -112,31 +113,31 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
 
         for(int i = 0; i < 3; i++) {
             if(cachedSelections.hasSelection(i)) {
-                context.drawGuiTexture(selectionIcons[14], relX - 1 + 57 * i, relY + 19, 64, 64);
+                context.drawGuiTexture(RenderLayer::getGuiTextured, selectionIcons[14], relX - 1 + 57 * i, relY + 19, 64, 64);
                 int enchantIndex = cachedSelections.get(i);
                 String enchant = cachedOptions.get(i).get(enchantIndex);
-                Optional<RegistryEntry.Reference<Enchantment>> maybeEnchant = this.client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant));
+                Optional<RegistryEntry.Reference<Enchantment>> maybeEnchant = this.client.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant));
                 if(maybeEnchant.isEmpty()) continue;
                 RegistryEntry.Reference<Enchantment> enchantment = maybeEnchant.get();
                 SpriteIdentifier spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.of(enchant).withPrefixedPath("large/"));
                 if(spriteId.getSprite() == missingno_icon.getSprite()) spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.ofVanilla("large/unknown"));
-                context.drawSprite(relX - 1 + 57 * i, relY + 19, 0, 64, 64, spriteId.getSprite());
+                context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), relX - 1 + 57 * i, relY + 19, 64, 64);
                 if(!isHovering[3 * i + enchantIndex]) continue;
                 context.drawTooltip(this.textRenderer, List.of(enchantment.value().description()), mouseX, mouseY);
             }
-            else if(cachedOptions.isLocked(i)) context.drawGuiTexture(locked_enchantment_big, relX - 1 + 57 * i, relY + 19, 64, 64);
+            else if(cachedOptions.isLocked(i)) context.drawGuiTexture(RenderLayer::getGuiTextured, locked_enchantment_big, relX - 1 + 57 * i, relY + 19, 64, 64);
             else {
                 EnchantmentOption option = cachedOptions.get(i);
-                context.drawGuiTexture(roman_numerals[i], relX + 23 + 57 * i, relY + 29, 16, 16);
+                context.drawGuiTexture(RenderLayer::getGuiTextured, roman_numerals[i], relX + 23 + 57 * i, relY + 29, 16, 16);
                 for(int l = 0; l < 3; l++) {
                     int x = (int) (relX + (-21 * Math.pow(l, 2) + 49 * l - 15)) + 57 * i;
                     int y = (l == 2 ? 34 : 19) + relY;
-                    context.drawGuiTexture(option.isLocked(l) ? locked_enchantment : selectionIcons[animationProgresses[3 * i + l] / 2], x, y, 64, 64);
+                    context.drawGuiTexture(RenderLayer::getGuiTextured, option.isLocked(l) ? locked_enchantment : selectionIcons[animationProgresses[3 * i + l] / 2], x, y, 64, 64);
                     if(option.isLocked(l)) continue;
                     String enchant = option.get(l);
-                    Optional<RegistryEntry.Reference<Enchantment>> enchantment = this.client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant));
+                    Optional<RegistryEntry.Reference<Enchantment>> enchantment = this.client.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant));
                     SpriteIdentifier spriteId = getEnchantmentIcon(enchant, 0);
-                    context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());
+                    context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), x, y, 64, 64);
                     if(isHovering[3 * i + l])
                         context.drawTooltip(this.textRenderer, List.of(enchantment.orElseThrow().value().description()), mouseX, mouseY);
                 }
@@ -152,9 +153,9 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
                 if(animationProgresses[3 * i + l] <= 0) continue;
                 int x = (int) (relX + (-21 * Math.pow(l , 2) + 49 * l - 15)) + 57 * i;
                 int y = (l == 2 ? 34 : 19) + relY;
-                context.drawGuiTexture(selectionIcons[animationProgresses[3 * i + l] / 2], x, y, 64, 64);
+                context.drawGuiTexture(RenderLayer::getGuiTextured, selectionIcons[animationProgresses[3 * i + l] / 2], x, y, 64, 64);
                 SpriteIdentifier spriteId = getEnchantmentIcon(option.get(l), animationProgresses[3 * i + l] / 2);
-                context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());
+                context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), x, y, 64, 64);
             }
         }
     }
@@ -203,7 +204,7 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
         if(this.client == null) throw new IllegalStateException("Client is null though in use");
         if(this.client.world == null) throw new IllegalStateException("Client world is null though in use");
         Identifier enchantId = Identifier.of(id);
-        Optional<RegistryEntry.Reference<Enchantment>> enchantment = this.client.world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntry(enchantId);
+        Optional<RegistryEntry.Reference<Enchantment>> enchantment = this.client.world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(enchantId);
         if(enchantment.isEmpty()) return new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index));
         SpriteIdentifier spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId(enchantId.getPath(), index));
         if(spriteId.getSprite() == missingno_icon.getSprite()) return new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index));

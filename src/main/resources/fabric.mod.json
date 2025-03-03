@@ -40,7 +40,8 @@
 	},
 	"custom": {
 		"mixson": [
-			"net.ramixin.dunchants.client.ModMixsonClient"
+			"net.ramixin.dunchants.ModMixsonClient",
+			"net.ramixin.dunchants.ModMixson"
 		]
 	}
 }

@@ -2,10 +2,10 @@ package net.ramixin.dunchants;
 
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
@@ -78,9 +78,7 @@ public interface DungeonEnchantsUtils {
     }
 
     static void generateEnchantmentOptions(ItemStack stack, World world, int playerLevel) {
-        Optional<RegistryEntryList.Named<Enchantment>> optional = world.getRegistryManager().get(RegistryKeys.ENCHANTMENT).getEntryList(EnchantmentTags.IN_ENCHANTING_TABLE);
-        if(optional.isEmpty()) return;
-        List<RegistryEntry<Enchantment>> enchantList = new ArrayList<>(optional.get().stream().filter(entry -> entry.value().isSupportedItem(stack)).toList());
+        List<RegistryEntry<Enchantment>> enchantList = getPossibleEnchantments(world.getRegistryManager(), stack);
         if(enchantList.size() <= 1) return;
 
         AtomicInteger totalWeight = new AtomicInteger();
@@ -101,6 +99,13 @@ public interface DungeonEnchantsUtils {
             options[i] = generateEnchantmentOption(world.getRandom(), playerLevel, i, discourageList, totalWeight.get(), enchantList);
         }
         stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, new EnchantmentOptions(Optional.of(options[0]), Optional.ofNullable(options[1]), Optional.ofNullable(options[2])));
+    }
+
+    static List<RegistryEntry<Enchantment>> getPossibleEnchantments(DynamicRegistryManager manager, ItemStack stack) {
+        List<RegistryEntry<Enchantment>> enchantList = new ArrayList<>();
+        for(RegistryEntry<Enchantment> entry : manager.getOrThrow(RegistryKeys.ENCHANTMENT).iterateEntries(EnchantmentTags.IN_ENCHANTING_TABLE))
+            if(entry.value().isSupportedItem(stack)) enchantList.add(entry);
+        return enchantList;
     }
 
     private static EnchantmentOption generateEnchantmentOption(Random random, int playerLevel, int optionIndex, Set<String> discourageList, int totalWeight, List<RegistryEntry<Enchantment>> enchantList) {
