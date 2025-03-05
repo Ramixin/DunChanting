@@ -1,21 +1,18 @@
-package net.ramixin.dunchants;
+package net.ramixin.dunchants.client;
 
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
-import net.ramixin.mixson.atp.annotations.Codec;
-import net.ramixin.mixson.atp.annotations.events.MixsonEvent;
+import net.ramixin.dunchants.DungeonEnchants;
+import net.ramixin.dunchants.DungeonEnchantsUtils;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import net.ramixin.mixson.inline.MixsonCodec;
-import net.ramixin.mixson.inline.ResourceReference;
+import net.ramixin.mixson.util.MixsonUtil;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Optional;
 
 import static net.ramixin.dunchants.DungeonEnchantsUtils.manhattanDistance;
 import static net.ramixin.dunchants.DungeonEnchantsUtils.toBufferedImage;
@@ -23,40 +20,39 @@ import static net.ramixin.dunchants.DungeonEnchantsUtils.toBufferedImage;
 @SuppressWarnings("unused")
 public class ModMixsonClient {
 
-    public static final MixsonCodec<BufferedImage> BUFFERED_IMAGE_PNG_MIXSON_CODEC = MixsonCodec.of("png",
+    public static final MixsonCodec<BufferedImage> BUFFERED_IMAGE_PNG_MIXSON_CODEC = MixsonCodec.create("png",
             resource -> ImageIO.read(resource.getInputStream()),
-            (r, elem) -> {
-                ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                try {
-                    ImageIO.write(elem, "png", stream);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                return new Resource(r.getPack(), () -> new ByteArrayInputStream(stream.toByteArray()), r::getMetadata);
-            },
-            BufferedImage::toString);
+            (r, elem) -> new Resource(r.getPack(), () -> new ByteArrayInputStream(DungeonEnchantsUtils.bufferedImageToStream(elem).toByteArray()), r::getMetadata),
+            DungeonEnchantsUtils::bufferedImageToStream
+    );
 
-    @MixsonEvent(value = "textures/enchantment/large*", codec = "bufferedImageCodec")
-    private static void FindAllLargeEnchantmentIcons(EventContext<BufferedImage> context) {
-        String large_id = context.getResourceId().toString().split("\\.")[0];
-        String small_id = large_id.replace("large", "small");
-        context.registerRuntimeEvent(
+    public static void onInitialize() {
+        Mixson.registerEvent(
+                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
                 Mixson.DEFAULT_PRIORITY,
-                large_id,
-                "generate transition textures",
-                context2 -> generateInBetweenTextures(context2, small_id),
-                true,
-                new ResourceReference(Mixson.DEFAULT_PRIORITY, small_id, small_id)
+                id -> id.getPath().startsWith("textures/enchantment/large/"),
+                "FindAllLargeEnchantmentIcons",
+                context -> {
+
+                    Identifier large_id = MixsonUtil.removeExtension(context.getResourceId());
+                    Identifier small_id = Identifier.of(large_id.getNamespace(), large_id.getPath().replace("large", "small"));
+                    context.registerRuntimeEvent(
+                            Mixson.DEFAULT_PRIORITY,
+                            id -> id.equals(small_id),
+                            "generateTransitionTextures",
+                            context2 -> generateInBetweenTextures(context2, context.getFile()),
+                            true
+                    );
+
+                },
+                false
         );
     }
 
-    private static void generateInBetweenTextures(EventContext<BufferedImage> context, String small_id) {
-        BufferedImage large = context.getFile();
+    private static void generateInBetweenTextures(EventContext<BufferedImage> context, BufferedImage large) {
         BufferedImage croppedLarge = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < 40; x++) for (int y = 0; y < 40; y++) croppedLarge.setRGB(x, y, large.getRGB(x + 12, y + 12));
-        Optional<BufferedImage> maybeSmall = context.getReference(small_id).retrieve();
-        if (maybeSmall.isEmpty()) throw new IllegalStateException("failed to locate file at " + small_id);
-        BufferedImage small = maybeSmall.get();
+        BufferedImage small = context.getFile();
         BufferedImage croppedSmall = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
         for (int x = 0; x < 16; x++) for (int y = 0; y < 16; y++) croppedSmall.setRGB(x, y, small.getRGB(x + 24, y + 24));
 
@@ -83,7 +79,7 @@ public class ModMixsonClient {
                     );
                     finalImage.setRGB(offset + x, offset + y, newColor.getRGB());
                 }
-            Identifier identifier = Identifier.of(context.getResourceId().toString().replace("large", "generated").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
+            Identifier identifier = Identifier.of(context.getResourceId().toString().replace("small", "generated").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
             context.createResource(identifier, finalImage);
         }
     }
@@ -135,10 +131,5 @@ public class ModMixsonClient {
         if (manhattanDistance(x, y, i - 1, i - 1) <= i / 2d - 1) cornerCount++;
         if (manhattanDistance(x, y, 0, i - 1) <= i / 2d - 1) cornerCount++;
         return cornerCount;
-    }
-
-    @Codec("bufferedImageCodec")
-    private static MixsonCodec<BufferedImage> bufferedImageCodec() {
-        return BUFFERED_IMAGE_PNG_MIXSON_CODEC;
     }
 }

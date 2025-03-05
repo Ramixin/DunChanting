@@ -16,8 +16,11 @@ import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.items.components.SelectedEnchantments;
 import org.apache.commons.lang3.function.TriFunction;
 
+import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.util.List;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -175,5 +178,15 @@ public interface DungeonEnchantsUtils {
 
     static int manhattanDistance(int x, int y, int x1, int y1) {
         return Math.abs(x - x1) + Math.abs(y - y1);
+    }
+
+    static ByteArrayOutputStream bufferedImageToStream(BufferedImage image) {
+        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+        try {
+            ImageIO.write(image, "png", stream);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return stream;
     }
 }

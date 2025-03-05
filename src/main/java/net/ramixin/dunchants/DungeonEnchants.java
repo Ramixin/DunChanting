@@ -23,5 +23,6 @@ public class DungeonEnchants implements ModInitializer {
 		Mixson.setDebugMode(DebugMode.LOG);
 		ModItemComponents.onInitialize();
 		ModMixson.onInitialize();
+
 	}
 }

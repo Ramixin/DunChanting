@@ -11,5 +11,6 @@ public class DungeonEnchantsClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		ModMixsonClient.onInitialize();
 	}
 }
