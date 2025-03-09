@@ -17,6 +17,8 @@ repositories {
 loom {
 	splitEnvironmentSourceSets()
 
+	accessWidenerPath = file("src/main/resources/dungeons_enchants.accesswidener")
+
 	mods {
 		"dungeon_enchants" {
 			sourceSet sourceSets.main

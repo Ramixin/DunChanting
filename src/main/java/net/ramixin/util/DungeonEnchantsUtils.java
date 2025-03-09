@@ -1,6 +1,11 @@
-package net.ramixin.dunchants;
+package net.ramixin.util;
 
+import it.unimi.dsi.fastutil.objects.Object2IntMap;
+import net.minecraft.component.ComponentType;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
@@ -10,6 +15,8 @@ import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
+import net.ramixin.dunchants.DungeonEnchants;
+import net.ramixin.dunchants.enchantments.LeveledEnchantmentEffect;
 import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.items.components.EnchantmentOption;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
@@ -27,6 +34,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
 public interface DungeonEnchantsUtils {
+
+    static boolean getLeveledEnchantmentEffectValue(ComponentType<LeveledEnchantmentEffect> type, World world, ItemStack stack) {
+        ItemEnchantmentsComponent itemEnchantmentsComponent = stack.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT);
+
+        for(Object2IntMap.Entry<RegistryEntry<Enchantment>> entry : itemEnchantmentsComponent.getEnchantmentEntries())
+            if(EnchantmentDuck.get(entry.getKey().value()).dungeonEnchants$getLeveledEffectResult(type, world, entry.getIntValue())) return true;
+        return false;
+    }
 
     static float oddsOfThirdEnchantmentOption(int level, int optionIndex) {
         int index = optionIndex * 5;
@@ -97,10 +112,36 @@ public interface DungeonEnchantsUtils {
         EnchantmentOption[] options = new EnchantmentOption[3];
         Set<String> discourageList = new HashSet<>();
 
+        ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(stack);
+        Iterator<RegistryEntry<Enchantment>> enchantmentsIterator = enchantments.getEnchantments().iterator();
+
+        int usedEnchantments = 0;
         for(int i = 0; i < 3; i++) {
+            if(enchantmentsIterator.hasNext()) {
+                RegistryEntry<Enchantment> enchant = enchantmentsIterator.next();
+                String id = enchant.getIdAsString();
+                discourageList.add(id);
+                options[i] = new EnchantmentOption(Optional.of(id), Optional.of(id), Optional.empty());
+                usedEnchantments++;
+                continue;
+            }
             if(i >= enchantmentSlotCount) break;
             options[i] = generateEnchantmentOption(world.getRandom(), playerLevel, i, discourageList, totalWeight.get(), enchantList);
         }
+        if(usedEnchantments > 0)
+            stack.set(ModItemComponents.SELECTED_ENCHANTMENTS,
+                    new SelectedEnchantments(
+                            Optional.of(0),
+                            usedEnchantments > 1 ? Optional.of(0) : Optional.empty(),
+                            usedEnchantments > 2 ? Optional.of(0) : Optional.empty()
+                    )
+            );
+        if(enchantmentsIterator.hasNext()) {
+            ItemEnchantmentsComponent.Builder newEnchantsBuilder = new ItemEnchantmentsComponent.Builder(ItemEnchantmentsComponent.DEFAULT);
+            while(enchantmentsIterator.hasNext()) newEnchantsBuilder.remove(val -> val == enchantmentsIterator.next());
+            stack.set(DataComponentTypes.ENCHANTMENTS, newEnchantsBuilder.build());
+        }
+
         stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, new EnchantmentOptions(Optional.of(options[0]), Optional.ofNullable(options[1]), Optional.ofNullable(options[2])));
     }
 

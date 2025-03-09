@@ -3,7 +3,7 @@ package net.ramixin.dunchants.items.components;
 import com.mojang.serialization.Codec;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
-import net.ramixin.dunchants.DungeonEnchantsUtils;
+import net.ramixin.util.DungeonEnchantsUtils;
 
 import java.util.Optional;
 

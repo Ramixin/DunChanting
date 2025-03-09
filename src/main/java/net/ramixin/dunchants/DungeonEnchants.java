@@ -1,8 +1,11 @@
 package net.ramixin.dunchants;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
+import net.ramixin.dunchants.enchantments.ModEnchantmentEffects;
 import net.ramixin.dunchants.items.ModItemComponents;
+import net.ramixin.dunchants.loot.ModSubPredicateTypes;
 import net.ramixin.mixson.debug.DebugMode;
 import net.ramixin.mixson.inline.Mixson;
 import org.slf4j.Logger;
@@ -19,9 +22,11 @@ public class DungeonEnchants implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("init");
-		Mixson.setDebugMode(DebugMode.LOG);
+		LOGGER.info("initializing (1/1)");
+		if(FabricLoader.getInstance().isDevelopmentEnvironment()) Mixson.setDebugMode(DebugMode.EXPORT);
 		ModItemComponents.onInitialize();
+		ModEnchantmentEffects.onInitialize();
+		ModSubPredicateTypes.onInitialize();
 		ModMixson.onInitialize();
 
 	}

@@ -15,7 +15,7 @@ import net.minecraft.screen.EnchantmentScreenHandler;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
-import net.ramixin.dunchants.DungeonEnchantsUtils;
+import net.ramixin.util.DungeonEnchantsUtils;
 import net.ramixin.dunchants.client.DungeonEnchantsClient;
 import net.ramixin.dunchants.items.components.EnchantmentOption;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;

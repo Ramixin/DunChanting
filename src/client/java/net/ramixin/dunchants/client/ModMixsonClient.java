@@ -3,7 +3,7 @@ package net.ramixin.dunchants.client;
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
-import net.ramixin.dunchants.DungeonEnchantsUtils;
+import net.ramixin.util.DungeonEnchantsUtils;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import net.ramixin.mixson.inline.MixsonCodec;
@@ -14,8 +14,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 
-import static net.ramixin.dunchants.DungeonEnchantsUtils.manhattanDistance;
-import static net.ramixin.dunchants.DungeonEnchantsUtils.toBufferedImage;
+import static net.ramixin.util.DungeonEnchantsUtils.manhattanDistance;
+import static net.ramixin.util.DungeonEnchantsUtils.toBufferedImage;
 
 @SuppressWarnings("unused")
 public class ModMixsonClient {

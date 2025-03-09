@@ -8,14 +8,14 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
-import net.ramixin.dunchants.DungeonEnchantsUtils;
+import net.ramixin.util.DungeonEnchantsUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import static net.ramixin.dunchants.DungeonEnchantsUtils.enchantmentIsInvalid;
+import static net.ramixin.util.DungeonEnchantsUtils.enchantmentIsInvalid;
 
 public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<EnchantmentOption> second, Optional<EnchantmentOption> third) {
 

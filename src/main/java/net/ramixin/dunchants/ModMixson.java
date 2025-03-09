@@ -3,16 +3,27 @@ package net.ramixin.dunchants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.ramixin.mixson.atp.annotations.events.MixsonEvent;
-import net.ramixin.mixson.debug.DebugMode;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
+import org.jetbrains.annotations.Nullable;
 
 public class ModMixson {
 
-    static void onInitialize() {
-        Mixson.setDebugMode(DebugMode.EXPORT);
+    private static final JsonObject CHANCE_REQUIREMENT;
+    private static final JsonObject LEVELED_CHANCE_SILK_TOUCH = buildLeveledChancePredicate("minecraft:silk_touch");
 
+    static {
+
+        CHANCE_REQUIREMENT = new JsonObject();
+        JsonObject chance = new JsonObject();
+        chance.addProperty("type", "minecraft:enchantment_level");
+        chance.add("amount", buildLinearValue(0.333, 0.333));
+        CHANCE_REQUIREMENT.add("chance", chance);
+        CHANCE_REQUIREMENT.addProperty("condition", "minecraft:random_chance");
+
+    }
+
+    public static void onInitialize() {
         Mixson.registerEvent(
                 Mixson.DEFAULT_PRIORITY,
                 id -> id.getPath().startsWith("enchantment/"),
@@ -20,6 +31,59 @@ public class ModMixson {
                 context -> context.getFile().getAsJsonObject().addProperty("max_level", 3),
                 true
         );
+
+        Mixson.registerEvent(
+                Mixson.DEFAULT_PRIORITY,
+                id -> id.getPath().startsWith("loot_table/blocks/"),
+                "AddLevelingToSilkTouch",
+                context -> {
+                    JsonArray pools = context.getFile().getAsJsonObject().getAsJsonArray("pools");
+                    if(pools == null) return;
+                    for (JsonElement pool : pools) {
+                        JsonObject poolObject = pool.getAsJsonObject();
+
+                        if(poolObject.has("conditions")) {
+                            JsonArray conditions = poolObject.getAsJsonArray("conditions");
+                            JsonObject matchToolPredicates = containsSilkTouchCondition(conditions);
+                            if(matchToolPredicates != null) matchToolPredicates.add("dungeon_enchants:leveled_chance", LEVELED_CHANCE_SILK_TOUCH);
+                        }
+
+                        JsonArray entries = poolObject.getAsJsonArray("entries");
+                        for(JsonElement entry : entries) {
+                            JsonObject entryObject = entry.getAsJsonObject();
+                            if(!entryObject.has("type")) continue;
+                            if(!entryObject.get("type").getAsString().equals("minecraft:alternatives")) continue;
+                            JsonArray children = entryObject.getAsJsonArray("children");
+                            for (JsonElement child : children) {
+                                JsonObject childObject = child.getAsJsonObject();
+                                if(!childObject.has("conditions")) continue;
+                                JsonArray conditions = childObject.getAsJsonArray("conditions");
+                                JsonObject matchToolPredicates = containsSilkTouchCondition(conditions);
+                                if(matchToolPredicates == null) continue;
+                                matchToolPredicates.add("dungeon_enchants:leveled_chance", LEVELED_CHANCE_SILK_TOUCH);
+
+                            }
+                        }
+                    }
+                },
+                true
+        );
+
+        Mixson.registerEvent(
+                Mixson.DEFAULT_PRIORITY,
+                "enchantment/frost_walker",
+                "RebalanceFrostWalker",
+                context -> {
+                    JsonArray effectArray = getEffect("minecraft:location_changed", context);
+                    if(!(effectArray.get(0) instanceof JsonObject obj)) return;
+                    JsonObject effect = obj.getAsJsonObject("effect");
+                    JsonObject radius = effect.getAsJsonObject("radius");
+                    radius.add("value", buildLinearValue(2, 1));
+                },
+                true
+        );
+
+
 
         modifyValueEffect("mending", "minecraft:repair_with_xp", 1, 0.5);
         modifyValueEffect("sharpness", "minecraft:damage", 1, 1);
@@ -44,39 +108,86 @@ public class ModMixson {
         modifyValueEffect("breach", "minecraft:armor_effectiveness", -0.2, -0.2);
         modifyValueEffect("fire_aspect", "minecraft:post_attack", 3, 2.5, "duration");
         modifyValueEffect("flame", "minecraft:projectile_spawned", 40, 30, "duration");
+        modifyRequirements("infinity", "minecraft:ammo_use", CHANCE_REQUIREMENT);
+        modifyRequirements("channeling", "minecraft:post_attack", CHANCE_REQUIREMENT);
+        modifyRequirements("channeling", "minecraft:hit_block", CHANCE_REQUIREMENT);
+        modifyRequirements("bane_of_arthropods", "minecraft:post_attack", CHANCE_REQUIREMENT);
+        replaceUnitEffect("minecraft:prevent_equipment_drop", "dungeon_enchants:leveled_prevent_equipment_drop");
+        replaceUnitEffect("minecraft:prevent_armor_change", "dungeon_enchants:leveled_prevent_armor_change");
+        modifyValueEffect("multishot", "minecraft:projectile_count", 0.75, 0.75);
+        modifyValueEffect("multishot", "minecraft:projectile_spread", 10, 0);
     }
 
-    @MixsonEvent("enchantment/infinity")
-    private static void modifyInfinityEnchantment(EventContext<JsonElement> context) {
-        JsonArray ammoUseEffect = getEffect("minecraft:ammo_use", context);
-        JsonElement effect = ammoUseEffect.get(0);
-        if(!(effect instanceof JsonObject objEffect)) return;
+
+    private static @Nullable JsonObject containsSilkTouchCondition(JsonArray conditions) {
+        for (JsonElement condition : conditions) {
+            JsonObject conditionObject = condition.getAsJsonObject();
+            if(!conditionObject.get("condition").getAsString().equals("minecraft:match_tool")) continue;
+            JsonObject predicate = conditionObject.getAsJsonObject("predicate");
+            JsonObject predicates = predicate.getAsJsonObject("predicates");
+            if(predicates == null) continue;
+            if(!predicates.has("minecraft:enchantments")) continue;
+            JsonArray enchantments = predicates.getAsJsonArray("minecraft:enchantments");
+            for (JsonElement enchantment : enchantments) {
+                JsonObject enchantmentObject = enchantment.getAsJsonObject();
+                if(enchantmentObject.get("enchantments").getAsString().equals("minecraft:silk_touch")) return predicates;
+            }
+        }
+        return null;
+    }
+
+    private static void replaceUnitEffect(String unitEffect, String newUnitEffect) {
+        Mixson.registerEvent(
+                Mixson.DEFAULT_PRIORITY,
+                id -> id.getPath().startsWith("enchantment/"),
+                "replaceUnitEffect_" + unitEffect,
+                context -> {
+                    JsonObject file = context.getFile().getAsJsonObject();
+                    if(!file.has("effects")) return;
+                    JsonObject effects = file.getAsJsonObject("effects");
+                    if(!effects.has(unitEffect)) return;
+                    effects.remove(unitEffect);
+                    effects.add(newUnitEffect, new JsonObject());
+                },
+                true
+        );
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static void modifyRequirements(String enchantment, String effectName, JsonObject requirement) {
+        Mixson.registerEvent(
+                Mixson.DEFAULT_PRIORITY,
+                "enchantment/"+enchantment,
+                "addChance_"+enchantment,
+                context -> {
+                    JsonArray effect = getEffect(effectName, context);
+                    JsonElement entry = effect.get(0);
+                    if(!(entry instanceof JsonObject objEffect)) return;
+                    addRequirement(objEffect, requirement);
+                },
+                false
+        );
+    }
+
+    private static void addRequirement(JsonObject entry, JsonObject requirement) {
+        if(!entry.has("requirements")) {
+            entry.add("requirements", requirement);
+            return;
+        }
+        JsonObject requirements = entry.getAsJsonObject("requirements");
+        if(requirements.get("condition").getAsString().equals("minecraft:all_of")) {
+            JsonArray terms = requirements.getAsJsonArray("terms");
+            terms.add(requirement);
+            return;
+        }
+        JsonObject allOfRequirement = new JsonObject();
+        allOfRequirement.addProperty("condition", "minecraft:all_of");
         JsonArray terms = new JsonArray();
-        JsonObject matchToolRequirement = objEffect.getAsJsonObject("requirements");
-        terms.add(matchToolRequirement);
-        JsonObject chanceRequirement = new JsonObject();
-        JsonObject chance = new JsonObject();
-        chance.addProperty("type", "minecraft:enchantment_level");
-        chance.add("amount", buildLinearValue(0.333, 0.333));
-        chanceRequirement.add("chance", chance);
-        chanceRequirement.addProperty("condition", "minecraft:random_chance");
-        terms.add(chanceRequirement);
-        JsonObject requirements = new JsonObject();
-        requirements.addProperty("condition", "minecraft:all_of");
-        requirements.add("terms", terms);
-        objEffect.add("requirements", requirements);
+        terms.add(requirements);
+        terms.add(requirement);
+        allOfRequirement.add("terms", terms);
+        entry.add("requirements", allOfRequirement);
     }
-
-    /*
-    FROST_WALKER - what on earth is this file
-    BINDING_CURSE - how do I do this one...
-    BANE_OF_ARTHROPODS - slowness effect
-    SILK_TOUCH - yeah, I'm at a lose
-    INFINITY - special man
-    CHANNELING - tricky tricky
-    MULTISHOT - hmmmm
-    VANISHING_CURSE - yep, special
-    */
 
     private static void modifyValueEffect(String enchantment, String effectName, double base, double perLevel) {
         modifyValueEffect(enchantment, effectName, base, perLevel, "effect");
@@ -86,7 +197,7 @@ public class ModMixson {
         Mixson.registerEvent(
                 Mixson.DEFAULT_PRIORITY,
                 "enchantment/"+enchantment,
-                "modify_"+enchantment,
+                "modifyValue_"+enchantment,
                 context -> {
                     JsonArray effect = getEffect(effectName, context);
                     JsonElement removedEntry = effect.remove(0);
@@ -101,7 +212,7 @@ public class ModMixson {
         Mixson.registerEvent(
                 Mixson.DEFAULT_PRIORITY,
                 "enchantment/"+enchantment,
-                "modify_"+enchantment,
+                "modifyAttribute_"+enchantment,
                 context -> {
                     JsonArray effect = getEffect("minecraft:attributes", context);
                     JsonElement removedEntry = effect.remove(0);
@@ -133,6 +244,13 @@ public class ModMixson {
         linearValue.addProperty("base", base);
         linearValue.addProperty("per_level_above_first", perLevel);
         return linearValue;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private static JsonObject buildLeveledChancePredicate(String enchantment) {
+        JsonObject shell = new JsonObject();
+        shell.addProperty("enchantment", enchantment);
+        return shell;
     }
 
 }

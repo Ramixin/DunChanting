@@ -7,7 +7,10 @@
     "LivingEntityMixin",
     "PlayerEntityMixin",
     "PlayerManagerMixin",
-    "ScreenHandlerMixin"
+    "ScreenHandlerMixin",
+    "enchantments.ArmorSlotMixin",
+    "enchantments.EnchantmentHelperMixin",
+    "enchantments.EnchantmentMixin"
   ],
   "injectors": {
     "defaultRequire": 1
