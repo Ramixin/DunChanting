@@ -8,14 +8,14 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
-import net.ramixin.util.DungeonEnchantsUtils;
+import net.ramixin.util.ModUtils;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import static net.ramixin.util.DungeonEnchantsUtils.enchantmentIsInvalid;
+import static net.ramixin.util.ModUtils.enchantmentIsInvalid;
 
 public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<EnchantmentOption> second, Optional<EnchantmentOption> third) {
 
@@ -43,7 +43,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
     }
 
     public boolean isInvalid(ItemStack stack, World world) {
-        List<RegistryEntry<Enchantment>> enchantList = DungeonEnchantsUtils.getPossibleEnchantments(world.getRegistryManager(), stack);
+        List<RegistryEntry<Enchantment>> enchantList = ModUtils.getPossibleEnchantments(world.getRegistryManager(), stack);
         if(enchantList.size() <= 1) return true;
         for (int i = 0; i < 3; i++) {
             if(isLocked(i)) continue;
@@ -62,7 +62,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
         EnchantmentOption[] options = new EnchantmentOption[3];
         Iterator<String> iterator = list.iterator();
         for(int i = 0; i < 3; i++) {
-            EnchantmentOption option = DungeonEnchantsUtils.decodeGenericTripleOptionalList(iterator, EnchantmentOption::new, String::isEmpty);
+            EnchantmentOption option = ModUtils.decodeGenericTripleOptionalList(iterator, EnchantmentOption::new, String::isEmpty);
             if(option.isLocked(0)) options[i] = null;
             else options[i] = option;
         }
@@ -73,7 +73,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
         List<String> list = new ArrayList<>();
         for(int i = 0; i < 3; i++) {
             getOptional(i).ifPresentOrElse(
-                    option -> list.addAll(DungeonEnchantsUtils.encodeGenericTripleOptionalList(option::getOptional, "")),
+                    option -> list.addAll(ModUtils.encodeGenericTripleOptionalList(option::getOptional, "")),
                     () -> { for (int l = 0; l < 3; l++) list.add(""); }
             );
         }

@@ -16,7 +16,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
-import net.ramixin.util.DungeonEnchantsUtils;
+import net.ramixin.util.ModUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -72,7 +72,7 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
         if(inventory != this.inventory) return;
         ItemStack stack = inventory.getStack(0);
         this.context.run((world, pos) -> {
-            if(!stack.isEmpty()) DungeonEnchantsUtils.updateOptionsIfInvalid(stack, world, playerLevel);
+            if(!stack.isEmpty()) ModUtils.updateOptionsIfInvalid(stack, world, playerLevel);
         });
 
     }
@@ -92,7 +92,7 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
         builder.set(enchantment, builder.getLevel(enchantment)+1);
         stack.set(DataComponentTypes.ENCHANTMENTS, builder.build());
-        DungeonEnchantsUtils.enchantEnchantmentOption(stack, id/3, id % 3);
+        ModUtils.enchantEnchantmentOption(stack, id/3, id % 3);
         this.inventory.markDirty();
         this.seed.set(player.getEnchantingTableSeed());
         this.onContentChanged(this.inventory);

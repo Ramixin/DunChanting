@@ -3,15 +3,15 @@ package net.ramixin.dunchants.items.components;
 import com.mojang.serialization.Codec;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
-import net.ramixin.util.DungeonEnchantsUtils;
+import net.ramixin.util.ModUtils;
 
 import java.util.Optional;
 
 public record SelectedEnchantments(Optional<Integer> first, Optional<Integer> second, Optional<Integer> third) {
 
     public static final Codec<SelectedEnchantments> CODEC = Codec.intRange(-1,2).listOf().xmap(
-            list -> DungeonEnchantsUtils.decodeGenericTripleOptionalList(list.iterator(), SelectedEnchantments::new, integer -> integer == -1),
-            option -> DungeonEnchantsUtils.encodeGenericTripleOptionalList(option::getOptional, -1)
+            list -> ModUtils.decodeGenericTripleOptionalList(list.iterator(), SelectedEnchantments::new, integer -> integer == -1),
+            option -> ModUtils.encodeGenericTripleOptionalList(option::getOptional, -1)
     );
 
     public static final PacketCodec<RegistryByteBuf, SelectedEnchantments> PACKET_CODEC = PacketCodec.of(SelectedEnchantments::encode, SelectedEnchantments::decode);

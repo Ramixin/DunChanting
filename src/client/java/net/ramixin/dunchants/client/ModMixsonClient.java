@@ -3,7 +3,7 @@ package net.ramixin.dunchants.client;
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
-import net.ramixin.util.DungeonEnchantsUtils;
+import net.ramixin.util.ModUtils;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import net.ramixin.mixson.inline.MixsonCodec;
@@ -14,16 +14,16 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 
-import static net.ramixin.util.DungeonEnchantsUtils.manhattanDistance;
-import static net.ramixin.util.DungeonEnchantsUtils.toBufferedImage;
+import static net.ramixin.util.ModUtils.manhattanDistance;
+import static net.ramixin.util.ModUtils.toBufferedImage;
 
 @SuppressWarnings("unused")
 public class ModMixsonClient {
 
     public static final MixsonCodec<BufferedImage> BUFFERED_IMAGE_PNG_MIXSON_CODEC = MixsonCodec.create("png",
             resource -> ImageIO.read(resource.getInputStream()),
-            (r, elem) -> new Resource(r.getPack(), () -> new ByteArrayInputStream(DungeonEnchantsUtils.bufferedImageToStream(elem).toByteArray()), r::getMetadata),
-            DungeonEnchantsUtils::bufferedImageToStream
+            (r, elem) -> new Resource(r.getPack(), () -> new ByteArrayInputStream(ModUtils.bufferedImageToStream(elem).toByteArray()), r::getMetadata),
+            ModUtils::bufferedImageToStream
     );
 
     public static void onInitialize() {

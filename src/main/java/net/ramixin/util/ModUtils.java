@@ -12,6 +12,9 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.EnchantmentTags;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
@@ -33,7 +36,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
-public interface DungeonEnchantsUtils {
+public interface ModUtils {
 
     static boolean getLeveledEnchantmentEffectValue(ComponentType<LeveledEnchantmentEffect> type, World world, ItemStack stack) {
         ItemEnchantmentsComponent itemEnchantmentsComponent = stack.getOrDefault(DataComponentTypes.ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT);
@@ -60,10 +63,6 @@ public interface DungeonEnchantsUtils {
         else return options.isInvalid(stack, world);
     }
 
-    static EnchantmentOptions getOptions(ItemStack stack) {
-        return stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, EnchantmentOptions.DEFAULT);
-    }
-
     static void updateOptionsIfInvalid(ItemStack stack, World world, int playerLevel) {
         if(hasInvalidOptions(stack, world)) generateEnchantmentOptions(stack, world, playerLevel);
     }
@@ -81,9 +80,9 @@ public interface DungeonEnchantsUtils {
 
     static <T, R> T decodeGenericTripleOptionalList(Iterator<R> iter, TriFunction<Optional<R>, Optional<R>, Optional<R>, T> constructor, Function<R, Boolean> evalFunc) {
         return constructor.apply(
-                DungeonEnchantsUtils.optionalOfEmpty(iter.next(), evalFunc),
-                DungeonEnchantsUtils.optionalOfEmpty(iter.next(), evalFunc),
-                DungeonEnchantsUtils.optionalOfEmpty(iter.next(), evalFunc)
+                ModUtils.optionalOfEmpty(iter.next(), evalFunc),
+                ModUtils.optionalOfEmpty(iter.next(), evalFunc),
+                ModUtils.optionalOfEmpty(iter.next(), evalFunc)
         );
     }
 
@@ -229,5 +228,33 @@ public interface DungeonEnchantsUtils {
             throw new RuntimeException(e);
         }
         return stream;
+    }
+
+    static List<Text> textWrapString(String text, int tolerance, Formatting... formatting) {
+        String[] splitWords = text.split(" ");
+        StringBuilder sb = new StringBuilder();
+        List<Text> result = new ArrayList<>();
+        for(String word : splitWords) {
+            if(calcScore(sb.length(), word.length(), tolerance) < calcScore(sb.length(), 0, tolerance)) {
+                if(!sb.isEmpty()) sb.append(' ');
+                sb.append(word);
+            } else {
+                result.add(applyFormatting(sb.toString(), formatting));
+                sb = new StringBuilder();
+                sb.append(word);
+            }
+        }
+        result.add(applyFormatting(sb.toString(), formatting));
+        return result;
+    }
+
+    private static Text applyFormatting(String text, Formatting... formatting) {
+        MutableText mutableText = Text.literal(text);
+        for(Formatting format : formatting) mutableText.formatted(format);
+        return mutableText;
+    }
+
+    private static int calcScore(int fixed, int length, int tolerance) {
+        return Math.abs(fixed + length - tolerance);
     }
 }

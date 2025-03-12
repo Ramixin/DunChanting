@@ -1,11 +1,13 @@
 package net.ramixin.dunchants;
 
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.enchantments.ModEnchantmentEffects;
 import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.loot.ModSubPredicateTypes;
+import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.mixson.debug.DebugMode;
 import net.ramixin.mixson.inline.Mixson;
 import org.slf4j.Logger;
@@ -28,6 +30,7 @@ public class DungeonEnchants implements ModInitializer {
 		ModEnchantmentEffects.onInitialize();
 		ModSubPredicateTypes.onInitialize();
 		ModMixson.onInitialize();
+		PayloadTypeRegistry.playS2C().register(EnchantmentPointsUpdateS2CPayload.PACKET_ID, EnchantmentPointsUpdateS2CPayload.PACKET_CODEC);
 
 	}
 }
