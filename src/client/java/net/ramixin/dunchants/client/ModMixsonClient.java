@@ -39,7 +39,7 @@ public class ModMixsonClient {
                     context.registerRuntimeEvent(
                             Mixson.DEFAULT_PRIORITY,
                             id -> id.equals(small_id),
-                            "generateTransitionTextures",
+                            "generateTransitionTextures_"+small_id,
                             context2 -> generateInBetweenTextures(context2, context.getFile()),
                             true
                     );
@@ -47,6 +47,50 @@ public class ModMixsonClient {
                 },
                 false
         );
+
+        Mixson.registerEvent(
+                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
+                Mixson.DEFAULT_PRIORITY + 100,
+                id -> id.getPath().startsWith("textures/enchantment/generated/"),
+                "GrayscaleAllGeneratedEnchantmentIcons",
+                context -> {
+                    Identifier resourceId = context.getResourceId();
+                    Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/generated/", "/generated/grayscale/"));
+                    BufferedImage grayscaleImage = grayscaleImage(context.getFile());
+                    context.createResource(newId, grayscaleImage);
+                },
+                false
+        );
+
+        Mixson.registerEvent(
+                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
+                Mixson.DEFAULT_PRIORITY + 100,
+                id -> id.getPath().startsWith("textures/enchantment/small/"),
+                "GrayscaleAllSmallEnchantmentIcons",
+                context -> {
+                    Identifier resourceId = context.getResourceId();
+                    Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/small/", "/generated/grayscale/small/"));
+                    BufferedImage grayscaleImage = grayscaleImage(context.getFile());
+                    context.createResource(newId, grayscaleImage);
+                },
+                false
+        );
+    }
+
+    private static BufferedImage grayscaleImage(BufferedImage image) {
+        BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        for (int x = 0; x < image.getWidth(); x++) {
+            for (int y = 0; y < image.getHeight(); y++) {
+                newImage.setRGB(x, y, grayscalePixel(image.getRGB(x, y)));
+            }
+        }
+        return newImage;
+    }
+
+    private static int grayscalePixel(int color) {
+        Color c = new Color(color, true);
+        float grayVal = (c.getRed() / 255f) * 0.299f + (c.getGreen() / 255f) * 0.587f + (c.getBlue() / 255f) * 0.114f;
+        return new Color(grayVal, grayVal, grayVal, c.getAlpha() / 255f).getRGB();
     }
 
     private static void generateInBetweenTextures(EventContext<BufferedImage> context, BufferedImage large) {
@@ -98,7 +142,7 @@ public class ModMixsonClient {
                     if (cornerCount != 0) finalImg.setRGB(offset + x, offset + y, 0x00000000);
                     else finalImg.setRGB(offset + x, offset + y, scaled.getRGB(x, y));
                 }
-            Identifier identifier = Identifier.of(context.getResourceId().toString().replace("large", "generated").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
+            Identifier identifier = Identifier.of(context.getResourceId().toString().replace("/large/", "/generated/").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
             context.createResource(identifier, finalImg);
             DungeonEnchants.LOGGER.info("created resource: {}", identifier);
         }

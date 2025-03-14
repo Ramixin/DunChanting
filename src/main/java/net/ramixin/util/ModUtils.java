@@ -230,22 +230,33 @@ public interface ModUtils {
         return stream;
     }
 
-    static List<Text> textWrapString(String text, int tolerance, Formatting... formatting) {
+    static List<String> textWrapString(String text, int tolerance) {
         String[] splitWords = text.split(" ");
         StringBuilder sb = new StringBuilder();
-        List<Text> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for(String word : splitWords) {
             if(calcScore(sb.length(), word.length(), tolerance) < calcScore(sb.length(), 0, tolerance)) {
                 if(!sb.isEmpty()) sb.append(' ');
                 sb.append(word);
             } else {
-                result.add(applyFormatting(sb.toString(), formatting));
+                result.add(sb.toString());
                 sb = new StringBuilder();
                 sb.append(word);
             }
         }
-        result.add(applyFormatting(sb.toString(), formatting));
+        result.add(sb.toString());
         return result;
+    }
+
+    static int convertStringListToText(List<String> stringList, List<Text> appendableList, Function<String, Integer> widthCallback, Formatting... formatting) {
+        int longest = 0;
+        for(String s : stringList) {
+            int length = widthCallback.apply(s);
+            if(length > longest) longest = length;
+            Text text = applyFormatting(s, formatting);
+            appendableList.add(text);
+        }
+        return longest;
     }
 
     private static Text applyFormatting(String text, Formatting... formatting) {

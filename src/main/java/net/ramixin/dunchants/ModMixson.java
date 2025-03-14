@@ -98,7 +98,7 @@ public class ModMixson {
         modifyValueEffect("smite", "minecraft:damage", 4.5, 4);
         modifyValueEffect("bane_of_arthropods", "minecraft:damage", 4.5, 4);
         modifyValueEffect("knockback", "minecraft:knockback", 1, 0.5);
-        modifyAttributeEffect("efficiency", "minecraft:mining_efficiency", 2, 1.5);
+        modifyAttributeEffect("efficiency", "minecraft:mining_efficiency", 10, 8);
         modifyValueEffect("power", "minecraft:damage", 1.5, 0.5);
         modifyValueEffect("punch", "minecraft:knockback", 1, 0.5);
         modifyValueEffect("luck_of_the_sea", "minecraft:fishing_luck_bonus", 0.5, 0.25);

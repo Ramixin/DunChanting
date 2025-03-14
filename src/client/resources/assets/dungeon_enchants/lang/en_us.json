@@ -8,8 +8,217 @@
   "container.enchant.powerful.2": "Costs 3 Enchantment Point",
   "container.enchant.powerful.3": "Costs 4 Enchantment Point",
 
+  "container.enchant.already_exists": "This enchantment already exists on the item",
+
+  "container.enchant.unknown_desc": "A mysterious enchantment...",
+
   "enchantment.minecraft.mending.desc": "Repairs tool durability when experience is absorbed",
   "enchantment.minecraft.mending.desc.1": "1x Repair Multiplier",
   "enchantment.minecraft.mending.desc.2": "1.5x Repair Multiplier",
-  "enchantment.minecraft.mending.desc.3": "2x Repair Multiplier"
+  "enchantment.minecraft.mending.desc.3": "2x Repair Multiplier",
+
+  "enchantment.minecraft.unbreaking.desc": "Reduces chances of durability loss",
+  "enchantment.minecraft.unbreaking.desc.1": "+1 Potency",
+  "enchantment.minecraft.unbreaking.desc.2": "+2 Potency",
+  "enchantment.minecraft.unbreaking.desc.3": "+3 Potency",
+
+  "enchantment.minecraft.vanishing_curse.desc": "Causes the item to disappear on death",
+  "enchantment.minecraft.vanishing_curse.desc.1": "33% Chance",
+  "enchantment.minecraft.vanishing_curse.desc.2": "67% Chance",
+  "enchantment.minecraft.vanishing_curse.desc.3": "100% Chance",
+
+  "enchantment.minecraft.aqua_affinity.desc": "Increases underwater mining speed",
+  "enchantment.minecraft.aqua_affinity.desc.1": "200% Speed",
+  "enchantment.minecraft.aqua_affinity.desc.2": "300% Speed",
+  "enchantment.minecraft.aqua_affinity.desc.3": "400% Speed",
+
+  "enchantment.minecraft.blast_protection.desc": "Reduces damage from explosions",
+  "enchantment.minecraft.blast_protection.desc.1": "20% Reduction",
+  "enchantment.minecraft.blast_protection.desc.2": "40% Reduction",
+  "enchantment.minecraft.blast_protection.desc.3": "60% Reduction",
+
+  "enchantment.minecraft.binding_curse.desc": "Causes armor to become irremovable",
+  "enchantment.minecraft.binding_curse.desc.1": "33% Chance",
+  "enchantment.minecraft.binding_curse.desc.2": "67% Chance",
+  "enchantment.minecraft.binding_curse.desc.3": "100% Chance",
+
+  "enchantment.minecraft.depth_strider.desc": "Increases movement speed in water",
+  "enchantment.minecraft.depth_strider.desc.1": "+0.33 Speed",
+  "enchantment.minecraft.depth_strider.desc.2": "+0.67 Speed",
+  "enchantment.minecraft.depth_strider.desc.3": "+1 Speed",
+
+  "enchantment.minecraft.feather_falling.desc": "Reduces fall damage",
+  "enchantment.minecraft.feather_falling.desc.1": "+4 Reduction",
+  "enchantment.minecraft.feather_falling.desc.2": "+8 Reduction",
+  "enchantment.minecraft.feather_falling.desc.3": "+12 Reduction",
+
+  "enchantment.minecraft.fire_protection.desc": "Reduces fire damage",
+  "enchantment.minecraft.fire_protection.desc.1": "-3 Damage",
+  "enchantment.minecraft.fire_protection.desc.2": "-5.5 Damage",
+  "enchantment.minecraft.fire_protection.desc.3": "-8 Damage",
+
+  "enchantment.minecraft.frost_walker.desc": "Freezes nearby water into frosted ice",
+  "enchantment.minecraft.frost_walker.desc.1": "2 Block Radius",
+  "enchantment.minecraft.frost_walker.desc.2": "3 Block Radius",
+  "enchantment.minecraft.frost_walker.desc.3": "4 Block Radius",
+
+  "enchantment.minecraft.projectile_protection.desc": "Reduces damage from projectiles",
+  "enchantment.minecraft.projectile_protection.desc.1": "-3 Damage",
+  "enchantment.minecraft.projectile_protection.desc.2": "-5.5 Damage",
+  "enchantment.minecraft.projectile_protection.desc.3": "-8 Damage",
+
+  "enchantment.minecraft.protection.desc": "Reduces overall damage",
+  "enchantment.minecraft.protection.desc.1": "-2 Damage",
+  "enchantment.minecraft.protection.desc.2": "-3 Damage",
+  "enchantment.minecraft.protection.desc.3": "-4 Damage",
+
+  "enchantment.minecraft.respiration.desc": "Provides extra oxygen when submerged under water",
+  "enchantment.minecraft.respiration.desc.1": "+1 Oxygen Bonus",
+  "enchantment.minecraft.respiration.desc.2": "+2 Oxygen Bonus",
+  "enchantment.minecraft.respiration.desc.3": "+3 Oxygen Bonus",
+
+  "enchantment.minecraft.soul_speed.desc": "Grants additional movement speed when on soul sand",
+  "enchantment.minecraft.soul_speed.desc.1": "+4.05% Speed",
+  "enchantment.minecraft.soul_speed.desc.2": "+5.1% Speed",
+  "enchantment.minecraft.soul_speed.desc.3": "+6.15% Speed",
+
+  "enchantment.minecraft.thorns.desc": "Deals damage to mobs when attacked",
+  "enchantment.minecraft.thorns.desc.1": "15% Chance",
+  "enchantment.minecraft.thorns.desc.2": "30% Chance",
+  "enchantment.minecraft.thorns.desc.3": "45% Chance",
+
+  "enchantment.minecraft.swift_sneak.desc": "Grants additional movement speed when sneaking",
+  "enchantment.minecraft.swift_sneak.desc.1": "+15% Speed",
+  "enchantment.minecraft.swift_sneak.desc.2": "+30% Speed",
+  "enchantment.minecraft.swift_sneak.desc.3": "+45% Speed",
+
+  "enchantment.minecraft.bane_of_arthropods.desc": "Deals additional damage to Arthropods",
+  "enchantment.minecraft.bane_of_arthropods.desc.1": "+4.5 Damage",
+  "enchantment.minecraft.bane_of_arthropods.desc.2": "+8.5 Damage",
+  "enchantment.minecraft.bane_of_arthropods.desc.3": "+12.5 Damage",
+
+  "enchantment.minecraft.breach.desc": "Reduces armor effectiveness",
+  "enchantment.minecraft.breach.desc.1": "-15% Armor Effectiveness",
+  "enchantment.minecraft.breach.desc.2": "-30% Armor Effectiveness",
+  "enchantment.minecraft.breach.desc.3": "-45% Armor Effectiveness",
+
+  "enchantment.minecraft.density.desc": "Increases damage per block fallen",
+  "enchantment.minecraft.density.desc.1": "+1.5 Damage",
+  "enchantment.minecraft.density.desc.2": "+2 Damage",
+  "enchantment.minecraft.density.desc.3": "+2.5 Damage",
+
+  "enchantment.minecraft.efficiency.desc": "Increases mining speed",
+  "enchantment.minecraft.efficiency.desc.1": "+10 Efficiency",
+  "enchantment.minecraft.efficiency.desc.2": "+18 Efficiency",
+  "enchantment.minecraft.efficiency.desc.3": "+26 Efficiency",
+
+  "enchantment.minecraft.fire_aspect.desc": "Sets attacked mobs on fire",
+  "enchantment.minecraft.fire_aspect.desc.1": "3 Seconds",
+  "enchantment.minecraft.fire_aspect.desc.2": "5.5 Seconds",
+  "enchantment.minecraft.fire_aspect.desc.3": "8 Seconds",
+
+  "enchantment.minecraft.looting.desc": "Increases odds of mobs dropping valuable loot",
+  "enchantment.minecraft.looting.desc.1": "+1 Potency",
+  "enchantment.minecraft.looting.desc.2": "+2 Potency",
+  "enchantment.minecraft.looting.desc.3": "+3 Potency",
+
+  "enchantment.minecraft.impaling.desc": "Increases damage to aquatic mobs",
+  "enchantment.minecraft.impaling.desc.1": "+4.5 Damage",
+  "enchantment.minecraft.impaling.desc.2": "+8.5 Damage",
+  "enchantment.minecraft.impaling.desc.3": "+12.5 Damage",
+
+  "enchantment.minecraft.knockback.desc": "Deals additional knockback to attacked mobs",
+  "enchantment.minecraft.knockback.desc.1": "+1 Knockback",
+  "enchantment.minecraft.knockback.desc.2": "+1.5 Knockback",
+  "enchantment.minecraft.knockback.desc.3": "+2 Knockback",
+
+  "enchantment.minecraft.sharpness.desc": "Deals additional overall damage",
+  "enchantment.minecraft.sharpness.desc.1": "+1 Damage",
+  "enchantment.minecraft.sharpness.desc.2": "+2 Damage",
+  "enchantment.minecraft.sharpness.desc.3": "+3 Damage",
+
+  "enchantment.minecraft.smite.desc": "Deals additional damage to undead mobs",
+  "enchantment.minecraft.smite.desc.1": "+4.5 Damage",
+  "enchantment.minecraft.smite.desc.2": "+8.5 Damage",
+  "enchantment.minecraft.smite.desc.3": "+12.5 Damage",
+
+  "enchantment.minecraft.sweeping_edge.desc": "Deals damage to mobs surrounding the attacked mob",
+  "enchantment.minecraft.sweeping_edge.desc.1": "1:2 Sweeping Ratio",
+  "enchantment.minecraft.sweeping_edge.desc.2": "2:3 Sweeping Ratio",
+  "enchantment.minecraft.sweeping_edge.desc.3": "3:4 Sweeping Ratio",
+
+  "enchantment.minecraft.wind_burst.desc": "Deals knockback to surrounding mobs and user after a smash attack",
+  "enchantment.minecraft.wind_burst.desc.1": "1.2 Knockback",
+  "enchantment.minecraft.wind_burst.desc.2": "1.75 Knockback",
+  "enchantment.minecraft.wind_burst.desc.3": "2.2 Knockback",
+
+  "enchantment.minecraft.channelling.desc": "Summons lightning when hitting a mob or lightning rod",
+  "enchantment.minecraft.channelling.desc.1": "33% Chance",
+  "enchantment.minecraft.channelling.desc.2": "67% Chance",
+  "enchantment.minecraft.channelling.desc.3": "100% Chance",
+
+  "enchantment.minecraft.flame.desc": "Sets attacked mob on fire",
+  "enchantment.minecraft.flame.desc.1": "2 Seconds",
+  "enchantment.minecraft.flame.desc.2": "3.5 Seconds",
+  "enchantment.minecraft.flame.desc.3": "5 Seconds",
+
+  "enchantment.minecraft.infinity.desc": "Prevents arrows from being consumed",
+  "enchantment.minecraft.infinity.desc.1": "33% Chance",
+  "enchantment.minecraft.infinity.desc.2": "67% Chance",
+  "enchantment.minecraft.infinity.desc.3": "100% Chance",
+
+  "enchantment.minecraft.loyalty.desc": "Returns the trident to the user after being thrown",
+  "enchantment.minecraft.loyalty.desc.1": "+1 Speed",
+  "enchantment.minecraft.loyalty.desc.2": "+2 Speed",
+  "enchantment.minecraft.loyalty.desc.3": "+3 Speed",
+
+  "enchantment.minecraft.riptide.desc": "Sends the user in a spin attack when used in water",
+  "enchantment.minecraft.riptide.desc.1": "1.5 Strength",
+  "enchantment.minecraft.riptide.desc.2": "2.25 Strength",
+  "enchantment.minecraft.riptide.desc.3": "3 Strength",
+
+  "enchantment.minecraft.multishot.desc": "Fires additional arrows",
+  "enchantment.minecraft.multishot.desc.1": "+1 Potency",
+  "enchantment.minecraft.multishot.desc.2": "+2 Potency",
+  "enchantment.minecraft.multishot.desc.3": "+3 Potency",
+
+  "enchantment.minecraft.piercing.desc": "Allows arrows to pass through mobs",
+  "enchantment.minecraft.piercing.desc.1": "+2 Mob",
+  "enchantment.minecraft.piercing.desc.2": "+3 Mob",
+  "enchantment.minecraft.piercing.desc.3": "+4 Mob",
+
+  "enchantment.minecraft.power.desc": "Increases overall projectile damage",
+  "enchantment.minecraft.power.desc.1": "+1.5 Damage",
+  "enchantment.minecraft.power.desc.2": "+2 Damage",
+  "enchantment.minecraft.power.desc.3": "+2.5 Damage",
+
+  "enchantment.minecraft.punch.desc": "Deals additional knockback upon projectile hit",
+  "enchantment.minecraft.punch.desc.1": "+1 Knockback",
+  "enchantment.minecraft.punch.desc.2": "+1.5 Knockback",
+  "enchantment.minecraft.punch.desc.3": "+2 Knockback",
+
+  "enchantment.minecraft.quick_charge.desc": "Decreasing crossbow load time",
+  "enchantment.minecraft.quick_charge.desc.1": "-25% Time",
+  "enchantment.minecraft.quick_charge.desc.2": "-50% Time",
+  "enchantment.minecraft.quick_charge.desc.3": "-75% Time",
+
+  "enchantment.minecraft.fortune.desc": "Increases odds of blocks dropping valuable loot",
+  "enchantment.minecraft.fortune.desc.1": "+1 Potency",
+  "enchantment.minecraft.fortune.desc.2": "+2 Potency",
+  "enchantment.minecraft.fortune.desc.3": "+3 Potency",
+
+  "enchantment.minecraft.luck_of_the_sea.desc": "Increases odds of fishing valuable loot",
+  "enchantment.minecraft.luck_of_the_sea.desc.1": "+1 Fishing Bonus",
+  "enchantment.minecraft.luck_of_the_sea.desc.2": "+2 Fishing Bonus",
+  "enchantment.minecraft.luck_of_the_sea.desc.3": "+3 Fishing Bonus",
+
+  "enchantment.minecraft.lure.desc": "Decreases time before a fish appears",
+  "enchantment.minecraft.lure.desc.1": "-5 Seconds",
+  "enchantment.minecraft.lure.desc.2": "-10 Seconds",
+  "enchantment.minecraft.lure.desc.3": "-15 Seconds",
+
+  "enchantment.minecraft.silk_touch.desc": "Causes blocks to drop themselves",
+  "enchantment.minecraft.silk_touch.desc.1": "33% Chance",
+  "enchantment.minecraft.silk_touch.desc.2": "67% Chance",
+  "enchantment.minecraft.silk_touch.desc.3": "100% Chance"
 }

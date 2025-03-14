@@ -1,8 +1,9 @@
-package net.ramixin.dunchants.client;
+package net.ramixin.dunchants.client.util;
 
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
+import net.ramixin.dunchants.client.DungeonEnchantsClient;
 
 public interface ModTextures {
 

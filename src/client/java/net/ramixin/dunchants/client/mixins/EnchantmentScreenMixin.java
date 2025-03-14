@@ -7,7 +7,9 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.EnchantmentScreenHandler;
 import net.minecraft.text.Text;
-import net.ramixin.dunchants.client.EnchantmentUIElement;
+import net.ramixin.dunchants.client.DungeonEnchantsClient;
+import net.ramixin.dunchants.client.enchantmentui.EnchantmentTableHoverManager;
+import net.ramixin.dunchants.client.enchantmentui.EnchantmentUIElement;
 import net.ramixin.util.ModUtils;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
@@ -17,6 +19,8 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
+
+import java.util.Optional;
 
 @Debug(export = true)
 @Mixin(EnchantmentScreen.class)
@@ -39,8 +43,9 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
 
     @Inject(method = "handledScreenTick", at = @At("TAIL"))
     private void applyTickToElements(CallbackInfo ci) {
-        if(enchantingElement == null || enchantingElement.isInvalid(stack))
-            enchantingElement = new EnchantmentUIElement(stack);
+        if(enchantingElement == null) enchantingElement = new EnchantmentUIElement(stack, new EnchantmentTableHoverManager());
+        else if(enchantingElement.isInvalid(stack)) enchantingElement = enchantingElement.createCopy(stack);
+
         enchantingElement.tick(stack);
     }
 
@@ -49,8 +54,18 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
         ci.cancel();
         int relX = (this.width - this.backgroundWidth) / 2;
         int relY = (this.height - this.backgroundHeight) / 2;
-        if(enchantingElement == null) return;
-        enchantingElement.render(context, relX, relY);
+        Optional<Integer> pointColor;
+        if(enchantingElement == null) pointColor = Optional.empty();
+        else {
+            enchantingElement.render(context, textRenderer, mouseX, mouseY, relX, relY);
+            pointColor = enchantingElement.getPointColor();
+        }
+
+        int points = DungeonEnchantsClient.getPlayerEntityDuck().dungeonEnchants$getEnchantmentPoints();
+        String text = String.valueOf(points);
+        int width = textRenderer.getWidth(text);
+        int color = pointColor.orElse(0xFF9c50af);
+        context.drawText(textRenderer, Text.of(text), relX + 88 - width / 2, relY + 8, color, false);
     }
 
     @Override
