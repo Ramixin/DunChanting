@@ -1,5 +1,10 @@
 {
 
+  "commands.player.enchantment_points.negative": "Player can not have negative enchantment points",
+  "commands.player.enchantment_points.get": "%s has %s enchantment point%s",
+  "commands.player.enchantment_points.set": "Set %s's enchantment points to %s",
+  "commands.player.enchantment_points.add": "Added %s enchantment point%s to %s",
+
   "container.enchant.common.1": "Costs 1 Enchantment Point",
   "container.enchant.common.2": "Costs 2 Enchantment Point",
   "container.enchant.common.3": "Costs 3 Enchantment Point",

@@ -8,8 +8,10 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.EnchantmentScreenHandler;
 import net.minecraft.text.Text;
 import net.ramixin.dunchants.client.DungeonEnchantsClient;
-import net.ramixin.dunchants.client.enchantmentui.EnchantmentTableHoverManager;
-import net.ramixin.dunchants.client.enchantmentui.EnchantmentUIElement;
+import net.ramixin.dunchants.client.enchantmentui.AbstractEnchantmentUIElement;
+import net.ramixin.dunchants.client.enchantmentui.etable.EnchantmentTableElement;
+import net.ramixin.dunchants.client.enchantmentui.etable.EnchantmentTableHoverManager;
+import net.ramixin.dunchants.client.util.EnchantmentUIHolder;
 import net.ramixin.util.ModUtils;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
@@ -24,12 +26,12 @@ import java.util.Optional;
 
 @Debug(export = true)
 @Mixin(EnchantmentScreen.class)
-public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentScreenHandler> {
+public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentScreenHandler> implements EnchantmentUIHolder {
 
     @Shadow private ItemStack stack;
 
     @Unique
-    private EnchantmentUIElement enchantingElement = null;
+    private AbstractEnchantmentUIElement enchantingElement = null;
 
 
     public EnchantmentScreenMixin(EnchantmentScreenHandler handler, PlayerInventory inventory, Text title) {
@@ -43,7 +45,9 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
 
     @Inject(method = "handledScreenTick", at = @At("TAIL"))
     private void applyTickToElements(CallbackInfo ci) {
-        if(enchantingElement == null) enchantingElement = new EnchantmentUIElement(stack, new EnchantmentTableHoverManager());
+        int relX = (this.width - this.backgroundWidth) / 2;
+        int relY = (this.height - this.backgroundHeight) / 2;
+        if(enchantingElement == null) enchantingElement = new EnchantmentTableElement(stack, new EnchantmentTableHoverManager(), relX, relY);
         else if(enchantingElement.isInvalid(stack)) enchantingElement = enchantingElement.createCopy(stack);
 
         enchantingElement.tick(stack);
@@ -68,14 +72,6 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
         context.drawText(textRenderer, Text.of(text), relX + 88 - width / 2, relY + 8, color, false);
     }
 
-    @Override
-    public void mouseMoved(double x, double y) {
-        int relX = (this.width - this.backgroundWidth) / 2;
-        int relY = (this.height - this.backgroundHeight) / 2;
-        if(enchantingElement == null) return;
-        enchantingElement.updateMousePosition(x, y, relX, relY);
-    }
-
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
     private void applyEnchantmentOnClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
         cir.setReturnValue(super.mouseClicked(mouseX, mouseY, button));
@@ -86,5 +82,10 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
         if(optionId == -1) return;
         this.handler.onButtonClick(this.client.player, optionId);
         this.client.interactionManager.clickButton(this.handler.syncId, optionId);
+    }
+
+    @Override
+    public AbstractEnchantmentUIElement dungeonEnchants$getUIElement() {
+        return enchantingElement;
     }
 }

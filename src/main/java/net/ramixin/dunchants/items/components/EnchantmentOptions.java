@@ -110,4 +110,13 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
         }
     }
 
+    public EnchantmentOptions modify(String enchant, int slotId, int optionId) {
+        EnchantmentOption[] options = new EnchantmentOption[3];
+        for(int i = 0; i < 3; i++) {
+            if(slotId != i) options[i] = getOptional(i).orElse(null);
+            else options[i] = getOptional(i).orElse(EnchantmentOption.DEFAULT).modify(enchant, optionId);
+        }
+        return new EnchantmentOptions(Optional.ofNullable(options[0]), Optional.ofNullable(options[1]), Optional.ofNullable(options[2]));
+    }
+
 }

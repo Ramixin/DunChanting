@@ -44,6 +44,15 @@ public record SelectedEnchantments(Optional<Integer> first, Optional<Integer> se
         };
     }
 
+    public SelectedEnchantments disenchantOption(int index) {
+        if(index < 0 || index > 2) throw new IndexOutOfBoundsException("unexpected index: " + index);
+        return switch (index) {
+            case 0 -> new SelectedEnchantments(Optional.empty(), second, third);
+            case 1 -> new SelectedEnchantments(first, Optional.empty(), third);
+            default -> new SelectedEnchantments(first, second, Optional.empty());
+        };
+    }
+
     private static void encode(SelectedEnchantments value, RegistryByteBuf buf) {
         for(int i = 0; i < 3; i++) {
             Optional<Integer> optional = value.getOptional(i);

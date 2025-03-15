@@ -1,4 +1,4 @@
-package net.ramixin.dunchants.mixins;
+package net.ramixin.dunchants.mixins.etable;
 
 import net.minecraft.screen.EnchantmentScreenHandler;
 import net.minecraft.screen.ScreenHandler;

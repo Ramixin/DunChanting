@@ -9,6 +9,7 @@ import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
+import net.ramixin.dunchants.client.screens.ModScreens;
 import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.util.PlayerEntityDuck;
 
@@ -21,6 +22,7 @@ public class DungeonEnchantsClient implements ClientModInitializer {
 	public void onInitializeClient() {
 		ModMixsonClient.onInitialize();
 		ClientPlayNetworking.registerGlobalReceiver(EnchantmentPointsUpdateS2CPayload.PACKET_ID, DungeonEnchantsClient::updateClientPlayerEnchantmentPoints);
+		ModScreens.onInitialize();
 	}
 
 	private static void updateClientPlayerEnchantmentPoints(EnchantmentPointsUpdateS2CPayload payload, ClientPlayNetworking.Context context) {

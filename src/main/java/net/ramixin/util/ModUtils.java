@@ -6,6 +6,7 @@ import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
@@ -21,10 +22,9 @@ import net.minecraft.world.World;
 import net.ramixin.dunchants.DungeonEnchants;
 import net.ramixin.dunchants.enchantments.LeveledEnchantmentEffect;
 import net.ramixin.dunchants.items.ModItemComponents;
-import net.ramixin.dunchants.items.components.EnchantmentOption;
-import net.ramixin.dunchants.items.components.EnchantmentOptions;
-import net.ramixin.dunchants.items.components.SelectedEnchantments;
+import net.ramixin.dunchants.items.components.*;
 import org.apache.commons.lang3.function.TriFunction;
+import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -160,8 +160,12 @@ public interface ModUtils {
         for(int i = 0; i < optionCount; i++) {
             int rolledWeight = random.nextBetween(1, totalWeight);
             String enchant = getRolledEnchantment(enchantList, rolledWeight, enchants, discourageList);
-            discourageList.add(enchant);
-            enchants[i] = enchant;
+            if(enchant == null) {
+                if(i != 2) return new EnchantmentOption(Optional.empty(), Optional.empty(), Optional.empty());
+            } else {
+                discourageList.add(enchant);
+                enchants[i] = enchant;
+            }
         }
         return new EnchantmentOption(Optional.ofNullable(enchants[0]), Optional.ofNullable(enchants[1]), Optional.ofNullable(enchants[2]));
     }
@@ -169,7 +173,12 @@ public interface ModUtils {
     private static String getRolledEnchantment(List<RegistryEntry<Enchantment>> enchantments, int rolledWeight, String[] enchants, Set<String> immutableDiscourage) {
         HashSet<String> discourageSet = new HashSet<>(immutableDiscourage);
         int index = 0;
+        int roll = 0;
         while(true) {
+            roll++;
+            if(roll == 1000) {
+                return null;
+            }
             Enchantment enchantment = enchantments.get(index).value();
             String id = enchantments.get(index++).getIdAsString();
             rolledWeight -= enchantment.getWeight();
@@ -267,5 +276,46 @@ public interface ModUtils {
 
     private static int calcScore(int fixed, int length, int tolerance) {
         return Math.abs(fixed + length - tolerance);
+    }
+
+    static RegistryEntry<Enchantment> idToEntry(Identifier id, @NotNull World world) {
+        Registry<Enchantment> enchantmentRegistry = world.getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT);
+        Optional<RegistryEntry.Reference<Enchantment>> maybeEnchant = enchantmentRegistry.getEntry(id);
+        if(maybeEnchant.isEmpty()) return null;
+        RegistryEntry.Reference<Enchantment> enchantmentReference = maybeEnchant.get();
+        return enchantmentRegistry.getEntry(enchantmentReference.value());
+    }
+
+    static int getEnchantingCost(RegistryEntry<Enchantment> entry, ItemStack stack) {
+        int level = EnchantmentHelper.getLevel(entry, stack) + 1;
+        boolean powerful = entry.isIn(ModTags.POWERFUL_ENCHANTMENT);
+        return powerful ? 1 + level : level;
+    }
+
+    static boolean canAfford(RegistryEntry<Enchantment> entry, ItemStack stack, PlayerEntity player) {
+        int required = getEnchantingCost(entry, stack);
+        PlayerEntityDuck duck = PlayerEntityDuck.get(player);
+        if (duck.dungeonEnchants$getEnchantmentPoints() >= required) return true;
+        return player.isCreative();
+    }
+
+    static boolean markAsUnavailable(ItemStack stack, int hoveringIndex, String enchant) {
+        EnchantmentOptions options = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, EnchantmentOptions.DEFAULT);
+        SelectedEnchantments selected = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
+        int index = hoveringIndex / 3;
+        for(int i = 0; i < 3; i++)
+            if(selected.hasSelection(i))
+                if(i != index && options.get(i).get(selected.get(i)).equals(enchant)) return true;
+        return false;
+    }
+
+    static int getAttributionOnItem(UUID uuid, ItemStack stack, int slotId) {
+        Attributions attributions = stack.get(ModItemComponents.ATTRIBUTIONS);
+        if(attributions == null) return 0;
+        List<AttributionEntry> entries = attributions.get(slotId);
+        int count = 0;
+        for(AttributionEntry entry : entries)
+            if(entry.playerUUID().equals(uuid)) count += entry.points();
+        return count;
     }
 }

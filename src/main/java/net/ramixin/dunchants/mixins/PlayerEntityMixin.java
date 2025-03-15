@@ -38,7 +38,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
 
     @Inject(method = "getNextLevelExperience", at = @At("HEAD"), cancellable = true)
     private void changeXpProgression(CallbackInfoReturnable<Integer> cir) {
-        cir.setReturnValue((int) (50 * Math.pow(1.25, experienceLevel)));
+        cir.setReturnValue(50 * (experienceLevel + 1));
     }
 
     @ModifyReturnValue(method = "shouldAlwaysDropExperience", at = @At("RETURN"))

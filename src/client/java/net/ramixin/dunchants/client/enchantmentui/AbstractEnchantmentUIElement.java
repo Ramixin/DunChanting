@@ -6,9 +6,9 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.client.DungeonEnchantsClient;
 import net.ramixin.dunchants.items.ModItemComponents;
@@ -22,10 +22,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import static net.ramixin.dunchants.client.util.ModClientUtil.*;
+import static net.ramixin.dunchants.client.util.ModClientUtils.getEnchantmentIcon;
+import static net.ramixin.dunchants.client.util.ModClientUtils.idToEntry;
 import static net.ramixin.dunchants.client.util.ModTextures.*;
 
-public class EnchantmentUIElement {
+public abstract class AbstractEnchantmentUIElement {
 
     private final ItemStack stack;
 
@@ -35,23 +36,24 @@ public class EnchantmentUIElement {
 
     private final AbstractUIHoverManager hoverManager;
 
-    private final int[] animationProgresses = new int[]{0,0,0,0,0,0,0,0,0};
+    private final int[] animationProgresses = new int[9];
+
+    private final boolean[] renderGrayscale = new boolean[9];
 
     private long previousMillisAtTick = System.currentTimeMillis();
 
     private static final int millisInAnimation = 144;
 
-    public EnchantmentUIElement(ItemStack stack, AbstractUIHoverManager hoverManager) {
+    private final int[] cachedRelatives = new int[2];
+
+
+    public AbstractEnchantmentUIElement(ItemStack stack, AbstractUIHoverManager hoverManager, int relX, int relY) {
         this.stack = stack;
         this.hoverManager = hoverManager;
         this.selectedEnchantments = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
         this.enchantmentOptions = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, null);
-    }
-
-    public EnchantmentUIElement createCopy(ItemStack stack) {
-        EnchantmentUIElement element = new EnchantmentUIElement(stack, hoverManager);
-        System.arraycopy(animationProgresses, 0, element.animationProgresses, 0, animationProgresses.length);
-        return element;
+        this.cachedRelatives[0] = relX;
+        this.cachedRelatives[1] = relY;
     }
 
 
@@ -61,21 +63,16 @@ public class EnchantmentUIElement {
         long currentMillis = System.currentTimeMillis();
         long millisDiff = currentMillis - previousMillisAtTick;
         previousMillisAtTick = currentMillis;
-        for(int i = 0; i < animationProgresses.length; i++)
-            if(i == hoverManager.getActiveHoverOption()) animationProgresses[i] = (int) Math.min(animationProgresses[i] + millisDiff, millisInAnimation);
-            else animationProgresses[i] = (int) Math.max(animationProgresses[i] - millisDiff, 0);
+        if(isAnimated())
+            for(int i = 0; i < animationProgresses.length; i++)
+                if(i == hoverManager.getActiveHoverOption()) animationProgresses[i] = (int) Math.min(animationProgresses[i] + millisDiff, millisInAnimation);
+                else animationProgresses[i] = (int) Math.max(animationProgresses[i] - millisDiff, 0);
 
         List<Runnable> delayedRenderCallbacks = new ArrayList<>();
         for(int i = 0; i < 3; i++) {
             renderEnchantmentSlot(context, i, relX, relY, delayedRenderCallbacks::add);
         }
         delayedRenderCallbacks.forEach(Runnable::run);
-
-        int points = DungeonEnchantsClient.getPlayerEntityDuck().dungeonEnchants$getEnchantmentPoints();
-        String text = String.valueOf(points);
-        int width = textRenderer.getWidth(text);
-        int color = hoverManager.setPointsToCustomColor().orElse(0xFF9c50af);
-        context.drawText(textRenderer, Text.of(text), relX + 88 - width / 2, relY + 8, color, false);
 
         hoverManager.render(this, stack, context, textRenderer, mouseX, mouseY, relX, relY);
     }
@@ -96,7 +93,7 @@ public class EnchantmentUIElement {
         Identifier enchantmentId = Identifier.of(enchant);
         RegistryEntry<Enchantment> enchantmentEntry = idToEntry(enchantmentId);
         if(enchantmentEntry == null) return;
-        int enchantLevel = getEnchantmentLevel(enchantmentEntry.getKey().orElseThrow(), stack);
+        int enchantLevel = EnchantmentHelper.getLevel(enchantmentEntry, stack);
 
         context.drawGuiTexture(RenderLayer::getGuiTextured, selectedEnchantmentBackdrops[enchantLevel-1], relX - 1 + 57 * index, relY + 19, 64, 64);
         SpriteIdentifier spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.of(enchant).withPrefixedPath("large/"));
@@ -115,8 +112,14 @@ public class EnchantmentUIElement {
         int animationIndex = 3 * index + optionIndex;
         int x = (int) (relX + (-21 * Math.pow(optionIndex , 2) + 49 * optionIndex - 15)) + 57 * index;
         int y = (optionIndex == 2 ? 34 : 19) + relY;
+
+        if(option.isLocked(optionIndex)) {
+            context.drawGuiTexture(RenderLayer::getGuiTextured, lockedEnchantmentOption, x, y, 64, 64);
+            return;
+        }
+
         String enchant = option.get(optionIndex);
-        boolean grayscale = markAsUnavailable(this, index * 3 + optionIndex, enchant);
+        boolean grayscale = renderGrayscale[3 * index + optionIndex];
         if(animationProgresses[animationIndex] > 0) {
             delayedRenderCallback.accept(() -> {
                 context.drawGuiTexture(RenderLayer::getGuiTextured, selectionAnimationTextures[animationProgresses[animationIndex] / (millisInAnimation / 12)], x, y, 64, 64);
@@ -126,17 +129,14 @@ public class EnchantmentUIElement {
             return;
         }
 
-        if(option.isLocked(optionIndex)) {
-            context.drawGuiTexture(RenderLayer::getGuiTextured, lockedEnchantmentOption, x, y, 64, 64);
-            return;
-        }
         context.drawGuiTexture(RenderLayer::getGuiTextured, enchantmentOptionBackdrop, x, y, 64, 64);
+
         SpriteIdentifier spriteId = getEnchantmentIcon(enchant, 0, missingIcon, grayscale);
         context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), x, y, 64, 64);
     }
 
-    public void updateMousePosition(double x, double y, int relX, int relY) {
-        hoverManager.update(this, stack, x, y, relX, relY);
+    public void updateMousePosition(double x, double y) {
+        hoverManager.update(this, stack, x, y, cachedRelatives[0], cachedRelatives[1]);
     }
 
     public int getActiveHoverOption() {
@@ -154,6 +154,18 @@ public class EnchantmentUIElement {
     public void tick(ItemStack stack) {
         this.selectedEnchantments = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
         this.enchantmentOptions = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, null);
+
+        if(enchantmentOptions == null) return;
+        for(int i = 0; i < 3; i++) {
+            if(enchantmentOptions.isLocked(i)) continue;
+            EnchantmentOption option = enchantmentOptions.get(i);
+            for(int j = 0; j < 3; j++) {
+                if(option.isLocked(j)) continue;
+                int hoverIndex = i * 3 + j;
+                renderGrayscale[hoverIndex] = renderGrayscale(hoverIndex, option.get(j));
+            }
+        }
+
     }
 
     public SelectedEnchantments getSelectedEnchantments() {
@@ -171,4 +183,14 @@ public class EnchantmentUIElement {
     public AbstractUIHoverManager getHoverManager() {
         return hoverManager;
     }
+
+    public abstract boolean renderGrayscale(int hoverIndex, String enchant);
+
+    public abstract AbstractEnchantmentUIElement createCopy(ItemStack stack);
+
+    public int[] getCachedRelatives() {
+        return cachedRelatives;
+    }
+
+    public abstract boolean isAnimated();
 }

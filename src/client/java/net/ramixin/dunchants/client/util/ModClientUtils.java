@@ -1,25 +1,19 @@
 package net.ramixin.dunchants.client.util;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.util.SpriteIdentifier;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.client.DungeonEnchantsClient;
-import net.ramixin.dunchants.client.enchantmentui.EnchantmentUIElement;
+import net.ramixin.dunchants.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.items.components.SelectedEnchantments;
-import net.ramixin.util.ModTags;
-import net.ramixin.util.PlayerEntityDuck;
 
 import java.util.Optional;
 
-public interface ModClientUtil {
+public interface ModClientUtils {
 
     static String getDescriptionTranslationKey(RegistryKey<Enchantment> key, int levelVariant) {
         Identifier id = key.getValue();
@@ -63,26 +57,7 @@ public interface ModClientUtil {
         return Identifier.of(builder.toString());
     }
 
-    static int getEnchantmentLevel(RegistryKey<Enchantment> key, ItemStack stack) {
-        ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(stack);
-        for(RegistryEntry<Enchantment> enchantEntry : enchantments.getEnchantments())
-            if(enchantEntry.matchesKey(key))
-                return Math.min(3, enchantments.getLevel(enchantEntry));
-        return 0;
-    }
-
-    static boolean canAfford(RegistryEntry<Enchantment> entry, ItemStack stack) {
-        int level = getEnchantmentLevel(entry.getKey().orElseThrow(), stack) + 1;
-        if(level > 3) return true;
-        boolean powerful = entry.isIn(ModTags.POWERFUL_ENCHANTMENT);
-        int required = powerful ? 1 + level : level;
-        PlayerEntityDuck duck = DungeonEnchantsClient.getPlayerEntityDuck();
-        if (duck.dungeonEnchants$getEnchantmentPoints() >= required) return true;
-        assert MinecraftClient.getInstance().player != null;
-        return MinecraftClient.getInstance().player.isCreative();
-    }
-
-    static boolean markAsUnavailable(EnchantmentUIElement element, int hoveringIndex, String enchant) {
+    static boolean markAsUnavailable(AbstractEnchantmentUIElement element, int hoveringIndex, String enchant) {
         SelectedEnchantments selectedEnchantments = element.getSelectedEnchantments();
         EnchantmentOptions enchantmentOptions = element.getEnchantmentOptions();
         int index = hoveringIndex / 3;
@@ -95,7 +70,7 @@ public interface ModClientUtil {
         return hoveringEnchantment.map(string -> string.equals(enchant)).orElse(false);
 
     }
-    static Optional<String> getHoveredEnchantment(EnchantmentUIElement element) {
+    static Optional<String> getHoveredEnchantment(AbstractEnchantmentUIElement element) {
         EnchantmentOptions enchantmentOptions = element.getEnchantmentOptions();
         int hovering = element.getHoverManager().getActiveHoverOption();
         if(hovering == -1) return Optional.empty();
@@ -104,7 +79,4 @@ public interface ModClientUtil {
         int optionIndex = hovering % 3;
         return enchantmentOptions.get(index).getOptional(optionIndex);
     }
-
-
-
 }

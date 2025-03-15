@@ -1,22 +1,28 @@
-package net.ramixin.dunchants.mixins;
+package net.ramixin.dunchants.mixins.etable;
 
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.*;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.ramixin.dunchants.items.ModItemComponents;
+import net.ramixin.dunchants.items.components.Attributions;
+import net.ramixin.dunchants.items.components.EnchantmentOption;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
+import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.util.ModUtils;
+import net.ramixin.util.PlayerEntityDuck;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -28,8 +34,6 @@ import org.spongepowered.asm.mixin.injection.ModifyArgs;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 import org.spongepowered.asm.mixin.injection.invoke.arg.Args;
-
-import java.util.Optional;
 
 @Mixin(EnchantmentScreenHandler.class)
 public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
@@ -84,15 +88,37 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
         EnchantmentOptions options = stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
         if(options == null) return;
         if(options.isLocked(id / 3)) return;
-        Optional<String> enchant = options.get(id / 3).getOptional(id % 3);
-        if(enchant.isEmpty()) return;
-        Optional<RegistryEntry.Reference<Enchantment>> optionalEnchantment = player.getWorld().getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT).getEntry(Identifier.of(enchant.get()));
-        if(optionalEnchantment.isEmpty()) return;
-        RegistryEntry.Reference<Enchantment> enchantment = optionalEnchantment.get();
+        EnchantmentOption option = options.get(id / 3);
+        if(option.isLocked(id % 3)) return;
+        String enchant = option.get(id % 3);
+        RegistryEntry<Enchantment> entry = ModUtils.idToEntry(Identifier.of(enchant), player.getWorld());
+        int enchantLevel = EnchantmentHelper.getLevel(entry, stack);
+        if(enchantLevel >= 3) return;
+        ItemStack lapisStack = this.inventory.getStack(1);
+        int lapisLevel = lapisStack.isEmpty() ? 0 : lapisStack.getCount();
+        if(lapisLevel < enchantLevel + 1 && !player.isCreative()) return;
+        boolean canAfford = ModUtils.canAfford(entry, stack, player);
+        if(!canAfford) return;
+        boolean markedAsUnavailable = ModUtils.markAsUnavailable(stack, id, enchant);
+        if(markedAsUnavailable) return;
+        int cost = ModUtils.getEnchantingCost(entry, stack);
+        lapisStack.decrement(enchantLevel + 1);
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(stack.getEnchantments());
-        builder.set(enchantment, builder.getLevel(enchantment)+1);
+        builder.set(entry, enchantLevel+1);
         stack.set(DataComponentTypes.ENCHANTMENTS, builder.build());
         ModUtils.enchantEnchantmentOption(stack, id/3, id % 3);
+        if(!player.isCreative()) {
+            if(!stack.contains(ModItemComponents.ATTRIBUTIONS)) stack.set(ModItemComponents.ATTRIBUTIONS, Attributions.createNew());
+            Attributions attributions = stack.get(ModItemComponents.ATTRIBUTIONS);
+            //noinspection DataFlowIssue
+            attributions.addAttribute(id / 3, player.getUuid(), cost);
+            stack.set(ModItemComponents.ATTRIBUTIONS, attributions);
+            if(player instanceof ServerPlayerEntity serverPlayer) {
+                PlayerEntityDuck duck = (PlayerEntityDuck) serverPlayer;
+                duck.dungeonEnchants$changeEnchantmentPoints(-cost);
+                ServerPlayNetworking.send(serverPlayer, new EnchantmentPointsUpdateS2CPayload(duck.dungeonEnchants$getEnchantmentPoints()));
+            }
+        }
         this.inventory.markDirty();
         this.seed.set(player.getEnchantingTableSeed());
         this.onContentChanged(this.inventory);

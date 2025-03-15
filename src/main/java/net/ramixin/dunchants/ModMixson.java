@@ -17,7 +17,7 @@ public class ModMixson {
         CHANCE_REQUIREMENT = new JsonObject();
         JsonObject chance = new JsonObject();
         chance.addProperty("type", "minecraft:enchantment_level");
-        chance.add("amount", buildLinearValue(0.333, 0.333));
+        chance.add("amount", buildLinearValue(0.334, 0.333));
         CHANCE_REQUIREMENT.add("chance", chance);
         CHANCE_REQUIREMENT.addProperty("condition", "minecraft:random_chance");
 
