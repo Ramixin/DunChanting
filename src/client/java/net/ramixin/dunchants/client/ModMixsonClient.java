@@ -3,7 +3,7 @@ package net.ramixin.dunchants.client;
 import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import net.ramixin.mixson.inline.MixsonCodec;
@@ -14,8 +14,8 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 
-import static net.ramixin.util.ModUtils.manhattanDistance;
-import static net.ramixin.util.ModUtils.toBufferedImage;
+import static net.ramixin.dunchants.util.ModUtils.manhattanDistance;
+import static net.ramixin.dunchants.util.ModUtils.toBufferedImage;
 
 @SuppressWarnings("unused")
 public class ModMixsonClient {
@@ -35,7 +35,7 @@ public class ModMixsonClient {
                 context -> {
 
                     Identifier large_id = MixsonUtil.removeExtension(context.getResourceId());
-                    Identifier small_id = Identifier.of(large_id.getNamespace(), large_id.getPath().replace("large", "small"));
+                    Identifier small_id = Identifier.of(large_id.getNamespace(), large_id.getPath().replace("/large/", "/small/"));
                     context.registerRuntimeEvent(
                             Mixson.DEFAULT_PRIORITY,
                             id -> id.equals(small_id),
@@ -70,6 +70,20 @@ public class ModMixsonClient {
                 context -> {
                     Identifier resourceId = context.getResourceId();
                     Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/small/", "/generated/grayscale/small/"));
+                    BufferedImage grayscaleImage = grayscaleImage(context.getFile());
+                    context.createResource(newId, grayscaleImage);
+                },
+                false
+        );
+
+        Mixson.registerEvent(
+                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
+                Mixson.DEFAULT_PRIORITY + 100,
+                id -> id.getPath().startsWith("textures/enchantment/large/"),
+                "GrayscaleLargeSmallEnchantmentIcons",
+                context -> {
+                    Identifier resourceId = context.getResourceId();
+                    Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/large/", "/generated/grayscale/large/"));
                     BufferedImage grayscaleImage = grayscaleImage(context.getFile());
                     context.createResource(newId, grayscaleImage);
                 },

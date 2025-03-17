@@ -12,7 +12,7 @@ import net.ramixin.dunchants.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchants.client.enchantmentui.etable.EnchantmentTableElement;
 import net.ramixin.dunchants.client.enchantmentui.etable.EnchantmentTableHoverManager;
 import net.ramixin.dunchants.client.util.EnchantmentUIHolder;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
 import org.spongepowered.asm.mixin.Debug;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

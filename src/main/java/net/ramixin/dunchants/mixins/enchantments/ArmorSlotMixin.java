@@ -11,7 +11,7 @@ import net.minecraft.screen.slot.ArmorSlot;
 import net.minecraft.util.Unit;
 import net.ramixin.dunchants.enchantments.ModEnchantmentEffects;
 import net.ramixin.dunchants.items.ModItemComponents;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;

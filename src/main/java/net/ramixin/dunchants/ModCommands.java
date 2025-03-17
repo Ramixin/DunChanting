@@ -22,8 +22,8 @@ import net.minecraft.text.Text;
 import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
-import net.ramixin.util.ModUtils;
-import net.ramixin.util.PlayerEntityDuck;
+import net.ramixin.dunchants.util.ModUtils;
+import net.ramixin.dunchants.util.PlayerEntityDuck;
 
 public class ModCommands {
 

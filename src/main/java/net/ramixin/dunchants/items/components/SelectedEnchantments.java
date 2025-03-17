@@ -3,7 +3,8 @@ package net.ramixin.dunchants.items.components;
 import com.mojang.serialization.Codec;
 import net.minecraft.network.RegistryByteBuf;
 import net.minecraft.network.codec.PacketCodec;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -17,6 +18,10 @@ public record SelectedEnchantments(Optional<Integer> first, Optional<Integer> se
     public static final PacketCodec<RegistryByteBuf, SelectedEnchantments> PACKET_CODEC = PacketCodec.of(SelectedEnchantments::encode, SelectedEnchantments::decode);
 
     public static final SelectedEnchantments DEFAULT = new SelectedEnchantments(Optional.empty(), Optional.empty(), Optional.empty());
+
+    public SelectedEnchantments(@Nullable Integer first, @Nullable Integer second, @Nullable Integer third) {
+        this(Optional.ofNullable(first), Optional.ofNullable(second), Optional.ofNullable(third));
+    }
 
     private Optional<Integer> getOptional(int index) {
         if(index < 0 || index > 2) throw new IndexOutOfBoundsException("unexpected index: " + index);

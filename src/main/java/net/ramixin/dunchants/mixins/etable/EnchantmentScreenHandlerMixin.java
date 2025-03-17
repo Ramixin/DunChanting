@@ -21,8 +21,8 @@ import net.ramixin.dunchants.items.components.Attributions;
 import net.ramixin.dunchants.items.components.EnchantmentOption;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
-import net.ramixin.util.ModUtils;
-import net.ramixin.util.PlayerEntityDuck;
+import net.ramixin.dunchants.util.ModUtils;
+import net.ramixin.dunchants.util.PlayerEntityDuck;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -68,6 +68,11 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
     private void moveLapizSlot(Args args) {
         args.set(3, 108);
         args.set(4, 14);
+    }
+
+    @ModifyArgs(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/EnchantmentScreenHandler;addPlayerSlots(Lnet/minecraft/inventory/Inventory;II)V"))
+    private void movePlayerSlots(Args args) {
+        args.set(2, (int) args.get(2) + 8);
     }
 
     @Inject(method = "onContentChanged", at = @At("HEAD"), cancellable = true)

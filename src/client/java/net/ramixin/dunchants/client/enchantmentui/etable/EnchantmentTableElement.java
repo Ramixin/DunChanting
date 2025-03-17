@@ -26,4 +26,9 @@ public class EnchantmentTableElement extends AbstractEnchantmentUIElement {
     public boolean isAnimated() {
         return true;
     }
+
+    @Override
+    protected boolean updatesComponents() {
+        return true;
+    }
 }

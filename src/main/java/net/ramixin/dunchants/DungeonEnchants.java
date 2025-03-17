@@ -15,7 +15,7 @@ import net.ramixin.dunchants.loot.ModSubPredicateTypes;
 import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.mixson.debug.DebugMode;
 import net.ramixin.mixson.inline.Mixson;
-import net.ramixin.util.PlayerEntityDuck;
+import net.ramixin.dunchants.util.PlayerEntityDuck;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

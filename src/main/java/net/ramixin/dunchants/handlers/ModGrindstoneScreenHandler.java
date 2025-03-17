@@ -23,11 +23,13 @@ import net.ramixin.dunchants.AttributionManager;
 import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.items.components.SelectedEnchantments;
+import net.ramixin.dunchants.util.ModUtils;
 
 public class ModGrindstoneScreenHandler extends ScreenHandler {
 
     private final ScreenHandlerContext context;
     private final Inventory inventory;
+    private final int playerLevel;
 
     public ModGrindstoneScreenHandler(int syncId, PlayerInventory playerInventory) {
         this(syncId, playerInventory, ScreenHandlerContext.EMPTY);
@@ -37,12 +39,9 @@ public class ModGrindstoneScreenHandler extends ScreenHandler {
         super(ModHandlers.MOD_GRINDSTONE_HANDLER_TYPE, syncId);
         this.context = context;
         this.inventory = new SimpleInventory(1);
-        this.addSlot(new Slot(inventory, 0, 80, 6) {
-            public boolean canInsert(ItemStack stack) {
-                return stack.contains(ModItemComponents.ENCHANTMENT_OPTIONS);
-            }
-        });
+        this.addSlot(new Slot(inventory, 0, 80, 6));
         this.addPlayerSlots(playerInventory, 8, 100);
+        this.playerLevel = playerInventory.player.experienceLevel;
     }
 
     @Override
@@ -95,5 +94,14 @@ public class ModGrindstoneScreenHandler extends ScreenHandler {
         this.inventory.markDirty();
 
         return true;
+    }
+
+    @Override
+    public void onContentChanged(Inventory inventory) {
+        super.onContentChanged(inventory);
+        ItemStack stack = inventory.getStack(0);
+        this.context.run((world, pos) -> {
+            if(!stack.isEmpty()) ModUtils.updateOptionsIfInvalid(stack, world, playerLevel);
+        });
     }
 }

@@ -8,7 +8,7 @@ import net.minecraft.util.Formatting;
 import net.minecraft.util.Language;
 import net.ramixin.dunchants.client.util.ModClientUtils;
 import net.ramixin.dunchants.client.util.TooltipRenderer;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +16,11 @@ import java.util.function.Function;
 
 public interface ModUIUtils {
 
+    int MILLIS_IN_ANIMATION = 144;
+
     static void renderUnavailableTooltip(RegistryEntry<Enchantment> enchantment, boolean powerful, TooltipRenderer renderer) {
         Function<Integer, Integer> xOffsetCalculator = width -> -30 - width;
-        renderNameText(enchantment, powerful, 1, renderer, false, xOffsetCalculator);
+        renderNameText(enchantment, powerful, 1, renderer, false, xOffsetCalculator, true);
 
         String message = Language.getInstance().get("container.enchant.already_exists");
         List<String> wrappedMessage = ModUtils.textWrapString(message, 20);
@@ -27,13 +29,13 @@ public interface ModUIUtils {
         renderer.render(finalMessage, -30 - width, 1);
     }
 
-    static void renderInfoTooltip(RegistryEntry<Enchantment> enchantment, boolean powerful, int level, TooltipRenderer renderer, boolean showDescription, boolean showCost, boolean darkenText, boolean rightAlign, boolean canAffordHoverOption) {
+    static void renderInfoTooltip(RegistryEntry<Enchantment> enchantment, boolean powerful, int level, TooltipRenderer renderer, boolean showDescription, boolean showCost, boolean darkenText, boolean rightAlign, boolean canAffordHoverOption, boolean showEffect, boolean showNameLevel) {
         Function<Integer, Integer> xOffsetCalculator = (width) -> {
             if(!rightAlign) return 0;
             else return -30 - width;
         };
 
-        renderNameText(enchantment, powerful, level, renderer, darkenText, xOffsetCalculator);
+        renderNameText(enchantment, powerful, level, renderer, darkenText, xOffsetCalculator, showNameLevel);
 
         if(showCost) {
             String costTranslationKey = ModClientUtils.getCostTranslationKey(level, powerful);
@@ -46,16 +48,20 @@ public interface ModUIUtils {
         if(showDescription)
             renderDescriptionText(enchantment.getKey().orElseThrow(), renderer, rightAlign);
 
-        renderEffectText(enchantment, renderer, level, darkenText, rightAlign);
+        if(showEffect)
+            renderEffectText(enchantment, renderer, level, darkenText, rightAlign);
     }
 
-    static void renderNameText(RegistryEntry<Enchantment> enchantment, boolean powerful, int level, TooltipRenderer renderer, boolean darkenText, Function<Integer, Integer> offsetCalculator) {
+    static void renderNameText(RegistryEntry<Enchantment> enchantment, boolean powerful, int level, TooltipRenderer renderer, boolean darkenText, Function<Integer, Integer> offsetCalculator, boolean showLevel) {
         Formatting nameColor;
         if(powerful)
             nameColor = darkenText ? Formatting.DARK_PURPLE : Formatting.LIGHT_PURPLE;
         else
             nameColor = darkenText ? Formatting.DARK_AQUA : Formatting.AQUA;
-        Text enchantmentName = Enchantment.getName(enchantment, level).copy().formatted(nameColor);
+        Text tempText;
+        if(showLevel) tempText = Enchantment.getName(enchantment, level);
+        else tempText = enchantment.value().description();
+        Text enchantmentName = tempText.copy().formatted(nameColor);
         int nameWidth = renderer.getTextWidth(enchantmentName);
         renderer.render(List.of(enchantmentName), offsetCalculator.apply(nameWidth), 1);
     }

@@ -8,14 +8,15 @@ import net.minecraft.network.codec.PacketCodec;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.world.World;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 
-import static net.ramixin.util.ModUtils.enchantmentIsInvalid;
+import static net.ramixin.dunchants.util.ModUtils.enchantmentIsInvalid;
 
 public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<EnchantmentOption> second, Optional<EnchantmentOption> third) {
 
@@ -24,6 +25,10 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
     public static final PacketCodec<RegistryByteBuf, EnchantmentOptions> PACKET_CODEC = PacketCodec.of(EnchantmentOptions::encodePacket, EnchantmentOptions::decodePacket);
 
     public static final EnchantmentOptions DEFAULT = new EnchantmentOptions(Optional.empty(), Optional.empty(), Optional.empty());
+
+    public EnchantmentOptions(@Nullable EnchantmentOption first, @Nullable EnchantmentOption second, @Nullable EnchantmentOption third) {
+        this(Optional.ofNullable(first), Optional.ofNullable(second), Optional.ofNullable(third));
+    }
 
     public Optional<EnchantmentOption> getOptional(int index) {
         if(index < 0 || index > 2) throw new IndexOutOfBoundsException("unexpected index: " + index);
@@ -66,7 +71,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
             if(option.isLocked(0)) options[i] = null;
             else options[i] = option;
         }
-        return new EnchantmentOptions(Optional.ofNullable(options[0]), Optional.ofNullable(options[1]), Optional.ofNullable(options[2]));
+        return new EnchantmentOptions(options[0], options[1], options[2]);
     }
 
     private List<String> encode() {
@@ -90,9 +95,9 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
             for(int j = 0; j < count; j++) enchants[j] = buf.readString();
 
             if(enchants[0] != null || enchants[1] != null || enchants[2] != null)
-                options[i] = new EnchantmentOption(Optional.ofNullable(enchants[0]), Optional.ofNullable(enchants[1]), Optional.ofNullable(enchants[2]));
+                options[i] = new EnchantmentOption(enchants[0], enchants[1], enchants[2]);
         }
-        return new EnchantmentOptions(Optional.ofNullable(options[0]), Optional.ofNullable(options[1]), Optional.ofNullable(options[2]));
+        return new EnchantmentOptions(options[0], options[1], options[2]);
     }
 
     private static void encodePacket(EnchantmentOptions value, RegistryByteBuf buf) {
@@ -116,7 +121,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
             if(slotId != i) options[i] = getOptional(i).orElse(null);
             else options[i] = getOptional(i).orElse(EnchantmentOption.DEFAULT).modify(enchant, optionId);
         }
-        return new EnchantmentOptions(Optional.ofNullable(options[0]), Optional.ofNullable(options[1]), Optional.ofNullable(options[2]));
+        return new EnchantmentOptions(options[0], options[1], options[2]);
     }
 
 }

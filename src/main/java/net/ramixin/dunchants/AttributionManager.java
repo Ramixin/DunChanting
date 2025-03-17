@@ -12,7 +12,7 @@ import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.items.components.AttributionEntry;
 import net.ramixin.dunchants.items.components.Attributions;
 import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
-import net.ramixin.util.PlayerEntityDuck;
+import net.ramixin.dunchants.util.PlayerEntityDuck;
 
 import java.util.*;
 

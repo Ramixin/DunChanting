@@ -11,7 +11,7 @@ import net.minecraft.util.Identifier;
 import net.ramixin.dunchants.DungeonEnchants;
 import net.ramixin.dunchants.client.screens.ModScreens;
 import net.ramixin.dunchants.payloads.EnchantmentPointsUpdateS2CPayload;
-import net.ramixin.util.PlayerEntityDuck;
+import net.ramixin.dunchants.util.PlayerEntityDuck;
 
 public class DungeonEnchantsClient implements ClientModInitializer {
 

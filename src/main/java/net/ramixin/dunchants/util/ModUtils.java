@@ -1,4 +1,4 @@
-package net.ramixin.util;
+package net.ramixin.dunchants.util;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import net.minecraft.component.ComponentType;
@@ -8,10 +8,13 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.registry.entry.RegistryEntryList;
 import net.minecraft.registry.tag.EnchantmentTags;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
@@ -120,7 +123,7 @@ public interface ModUtils {
                 RegistryEntry<Enchantment> enchant = enchantmentsIterator.next();
                 String id = enchant.getIdAsString();
                 discourageList.add(id);
-                options[i] = new EnchantmentOption(Optional.of(id), Optional.of(id), Optional.empty());
+                options[i] = new EnchantmentOption(id, id, null);
                 usedEnchantments++;
                 continue;
             }
@@ -130,9 +133,9 @@ public interface ModUtils {
         if(usedEnchantments > 0)
             stack.set(ModItemComponents.SELECTED_ENCHANTMENTS,
                     new SelectedEnchantments(
-                            Optional.of(0),
-                            usedEnchantments > 1 ? Optional.of(0) : Optional.empty(),
-                            usedEnchantments > 2 ? Optional.of(0) : Optional.empty()
+                            0,
+                            usedEnchantments > 1 ? 0 : null,
+                            usedEnchantments > 2 ? 0 : null
                     )
             );
         if(enchantmentsIterator.hasNext()) {
@@ -141,7 +144,7 @@ public interface ModUtils {
             stack.set(DataComponentTypes.ENCHANTMENTS, newEnchantsBuilder.build());
         }
 
-        stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, new EnchantmentOptions(Optional.of(options[0]), Optional.ofNullable(options[1]), Optional.ofNullable(options[2])));
+        stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, new EnchantmentOptions(options[0], options[1], options[2]));
     }
 
     static List<RegistryEntry<Enchantment>> getPossibleEnchantments(DynamicRegistryManager manager, ItemStack stack) {
@@ -292,6 +295,11 @@ public interface ModUtils {
         return powerful ? 1 + level : level;
     }
 
+    static int getEnchantmentLevel(RegistryEntry<Enchantment> entry, ItemStack stack) {
+        if(stack.isOf(Items.ENCHANTED_BOOK)) return stack.getOrDefault(DataComponentTypes.STORED_ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT).getLevel(entry);
+        else return EnchantmentHelper.getLevel(entry, stack);
+    }
+
     static boolean canAfford(RegistryEntry<Enchantment> entry, ItemStack stack, PlayerEntity player) {
         int required = getEnchantingCost(entry, stack);
         PlayerEntityDuck duck = PlayerEntityDuck.get(player);
@@ -318,4 +326,14 @@ public interface ModUtils {
             if(entry.playerUUID().equals(uuid)) count += entry.points();
         return count;
     }
+
+    static List<RegistryEntry<Enchantment>> getOrderedEnchantments(ItemStack stack, RegistryWrapper.WrapperLookup wrapperLookup) {
+        RegistryEntryList<Enchantment> registryEntryList = ItemEnchantmentsComponent.getTooltipOrderList(wrapperLookup, RegistryKeys.ENCHANTMENT, EnchantmentTags.TOOLTIP_ORDER);
+        ItemEnchantmentsComponent storedEnchantments = stack.getOrDefault(DataComponentTypes.STORED_ENCHANTMENTS, ItemEnchantmentsComponent.DEFAULT);
+        List<RegistryEntry<Enchantment>> orderedList = new ArrayList<>();
+        for(RegistryEntry<Enchantment> enchantment : registryEntryList)
+            if(storedEnchantments.getLevel(enchantment) > 0) orderedList.add(enchantment);
+        return orderedList;
+    }
+
 }

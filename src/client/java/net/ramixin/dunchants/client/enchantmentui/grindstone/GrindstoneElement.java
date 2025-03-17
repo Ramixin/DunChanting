@@ -12,7 +12,7 @@ public class GrindstoneElement extends AbstractEnchantmentUIElement {
 
     @Override
     public boolean renderGrayscale(int hoverIndex, String enchant) {
-        return true;
+        return !getSelectedEnchantments().hasSelection(hoverIndex / 3);
     }
 
     @Override
@@ -23,5 +23,10 @@ public class GrindstoneElement extends AbstractEnchantmentUIElement {
     @Override
     public boolean isAnimated() {
         return false;
+    }
+
+    @Override
+    protected boolean updatesComponents() {
+        return true;
     }
 }

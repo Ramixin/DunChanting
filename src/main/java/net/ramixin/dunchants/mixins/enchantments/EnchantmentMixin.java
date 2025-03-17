@@ -8,7 +8,7 @@ import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.World;
 import net.ramixin.dunchants.enchantments.LeveledEnchantmentEffect;
-import net.ramixin.util.EnchantmentDuck;
+import net.ramixin.dunchants.util.EnchantmentDuck;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;

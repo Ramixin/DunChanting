@@ -1,10 +1,16 @@
 package net.ramixin.dunchants.items.components;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.Optional;
 
 public record EnchantmentOption(Optional<String> first, Optional<String> second, Optional<String> third) {
 
     public static final EnchantmentOption DEFAULT = new EnchantmentOption(Optional.empty(), Optional.empty(), Optional.empty());
+
+    public EnchantmentOption(@Nullable String first, @Nullable String second, @Nullable String third) {
+        this(Optional.ofNullable(first), Optional.ofNullable(second), Optional.ofNullable(third));
+    }
 
     public Optional<String> getOptional(int index) {
         if(index < 0 || index > 2) throw new IndexOutOfBoundsException("unexpected index: " + index);

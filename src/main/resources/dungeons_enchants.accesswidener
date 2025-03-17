@@ -1,2 +1,3 @@
 accessWidener v2 named
 accessible class net/minecraft/screen/slot/ArmorSlot
+accessible method net/minecraft/component/type/ItemEnchantmentsComponent getTooltipOrderList (Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/registry/tag/TagKey;)Lnet/minecraft/registry/entry/RegistryEntryList;

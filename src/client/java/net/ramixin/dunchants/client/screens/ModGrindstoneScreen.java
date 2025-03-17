@@ -14,7 +14,7 @@ import net.ramixin.dunchants.client.enchantmentui.grindstone.GrindstoneElement;
 import net.ramixin.dunchants.client.enchantmentui.grindstone.GrindstoneHoverManager;
 import net.ramixin.dunchants.client.util.EnchantmentUIHolder;
 import net.ramixin.dunchants.handlers.ModGrindstoneScreenHandler;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
 
 import java.util.Optional;
 import java.util.UUID;

@@ -6,22 +6,22 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.RenderLayer;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
-import net.ramixin.dunchants.client.DungeonEnchantsClient;
+import net.ramixin.dunchants.client.util.ModClientUtils;
 import net.ramixin.dunchants.items.ModItemComponents;
 import net.ramixin.dunchants.items.components.EnchantmentOption;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.items.components.SelectedEnchantments;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static net.ramixin.dunchants.client.enchantmentui.ModUIUtils.MILLIS_IN_ANIMATION;
 import static net.ramixin.dunchants.client.util.ModClientUtils.getEnchantmentIcon;
 import static net.ramixin.dunchants.client.util.ModClientUtils.idToEntry;
 import static net.ramixin.dunchants.client.util.ModTextures.*;
@@ -42,16 +42,14 @@ public abstract class AbstractEnchantmentUIElement {
 
     private long previousMillisAtTick = System.currentTimeMillis();
 
-    private static final int millisInAnimation = 144;
-
     private final int[] cachedRelatives = new int[2];
 
 
     public AbstractEnchantmentUIElement(ItemStack stack, AbstractUIHoverManager hoverManager, int relX, int relY) {
         this.stack = stack;
         this.hoverManager = hoverManager;
-        this.selectedEnchantments = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
-        this.enchantmentOptions = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, null);
+        this.enchantmentOptions = generateOptions(stack);
+        this.selectedEnchantments = generateSelection(stack);
         this.cachedRelatives[0] = relX;
         this.cachedRelatives[1] = relY;
     }
@@ -65,7 +63,7 @@ public abstract class AbstractEnchantmentUIElement {
         previousMillisAtTick = currentMillis;
         if(isAnimated())
             for(int i = 0; i < animationProgresses.length; i++)
-                if(i == hoverManager.getActiveHoverOption()) animationProgresses[i] = (int) Math.min(animationProgresses[i] + millisDiff, millisInAnimation);
+                if(i == hoverManager.getActiveHoverOption()) animationProgresses[i] = (int) Math.min(animationProgresses[i] + millisDiff, MILLIS_IN_ANIMATION);
                 else animationProgresses[i] = (int) Math.max(animationProgresses[i] - millisDiff, 0);
 
         List<Runnable> delayedRenderCallbacks = new ArrayList<>();
@@ -93,12 +91,12 @@ public abstract class AbstractEnchantmentUIElement {
         Identifier enchantmentId = Identifier.of(enchant);
         RegistryEntry<Enchantment> enchantmentEntry = idToEntry(enchantmentId);
         if(enchantmentEntry == null) return;
-        int enchantLevel = EnchantmentHelper.getLevel(enchantmentEntry, stack);
+        int enchantLevel = ModUtils.getEnchantmentLevel(enchantmentEntry, stack);
 
         context.drawGuiTexture(RenderLayer::getGuiTextured, selectedEnchantmentBackdrops[enchantLevel-1], relX - 1 + 57 * index, relY + 19, 64, 64);
-        SpriteIdentifier spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.of(enchant).withPrefixedPath("large/"));
-        if(spriteId.getSprite() == missingIcon.getSprite()) spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.ofVanilla("large/unknown"));
-        context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), relX - 1 + 57 * index, relY + 19, 64, 64);
+
+        SpriteIdentifier largeEnchant = ModClientUtils.getEnchantmentIcon(enchant, 0, missingIcon, renderGrayscale[index * 3], true);
+        context.drawSpriteStretched(RenderLayer::getGuiTextured, largeEnchant.getSprite(), relX - 1 + 57 * index, relY + 19, 64, 64);
     }
 
     private void renderEnchantmentSlotOptions(DrawContext context, int index, int relX, int relY, Consumer<Runnable> delayedRenderCallback) {
@@ -122,8 +120,8 @@ public abstract class AbstractEnchantmentUIElement {
         boolean grayscale = renderGrayscale[3 * index + optionIndex];
         if(animationProgresses[animationIndex] > 0) {
             delayedRenderCallback.accept(() -> {
-                context.drawGuiTexture(RenderLayer::getGuiTextured, selectionAnimationTextures[animationProgresses[animationIndex] / (millisInAnimation / 12)], x, y, 64, 64);
-                SpriteIdentifier spriteId = getEnchantmentIcon(enchant, animationProgresses[animationIndex] / (millisInAnimation / 12), missingIcon, grayscale);
+                context.drawGuiTexture(RenderLayer::getGuiTextured, selectionAnimationTextures[animationProgresses[animationIndex] / (MILLIS_IN_ANIMATION / 12)], x, y, 64, 64);
+                SpriteIdentifier spriteId = getEnchantmentIcon(enchant, animationProgresses[animationIndex] / (MILLIS_IN_ANIMATION / 12), missingIcon, grayscale, false);
                 context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), x, y, 64, 64);
             });
             return;
@@ -131,7 +129,7 @@ public abstract class AbstractEnchantmentUIElement {
 
         context.drawGuiTexture(RenderLayer::getGuiTextured, enchantmentOptionBackdrop, x, y, 64, 64);
 
-        SpriteIdentifier spriteId = getEnchantmentIcon(enchant, 0, missingIcon, grayscale);
+        SpriteIdentifier spriteId = getEnchantmentIcon(enchant, 0, missingIcon, grayscale, false);
         context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), x, y, 64, 64);
     }
 
@@ -143,7 +141,7 @@ public abstract class AbstractEnchantmentUIElement {
         return hoverManager.getActiveHoverOption();
     }
 
-    private boolean canRender() {
+    protected boolean canRender() {
         return enchantmentOptions != null && !ModUtils.hasInvalidOptions(stack, MinecraftClient.getInstance().world);
     }
 
@@ -152,8 +150,10 @@ public abstract class AbstractEnchantmentUIElement {
     }
 
     public void tick(ItemStack stack) {
-        this.selectedEnchantments = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
-        this.enchantmentOptions = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, null);
+        if(updatesComponents()) {
+            this.selectedEnchantments = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
+            this.enchantmentOptions = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, null);
+        }
 
         if(enchantmentOptions == null) return;
         for(int i = 0; i < 3; i++) {
@@ -193,4 +193,18 @@ public abstract class AbstractEnchantmentUIElement {
     }
 
     public abstract boolean isAnimated();
+
+    protected EnchantmentOptions generateOptions(ItemStack stack) {
+        return stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, null);
+    }
+
+    protected SelectedEnchantments generateSelection(ItemStack stack) {
+        return stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
+    }
+
+    public ItemStack getStack() {
+        return stack;
+    }
+
+    protected abstract boolean updatesComponents();
 }

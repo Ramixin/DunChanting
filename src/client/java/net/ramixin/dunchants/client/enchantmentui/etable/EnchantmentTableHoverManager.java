@@ -15,8 +15,8 @@ import net.ramixin.dunchants.client.util.TooltipRenderer;
 import net.ramixin.dunchants.items.components.EnchantmentOption;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.items.components.SelectedEnchantments;
-import net.ramixin.util.ModTags;
-import net.ramixin.util.ModUtils;
+import net.ramixin.dunchants.util.ModTags;
+import net.ramixin.dunchants.util.ModUtils;
 
 import java.util.Optional;
 
@@ -88,11 +88,11 @@ public class EnchantmentTableHoverManager extends AbstractUIHoverManager {
             renderUnavailableTooltip(entry, powerful, renderer);
             return;
         }
-        if(element.getSelectedEnchantments().hasSelection(index)) renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, canAffordHoverOption);
+        if(element.getSelectedEnchantments().hasSelection(index)) renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, canAffordHoverOption, true, true);
         if(enchantLevel >= 3) return;
         renderer.resetHeight();
         boolean isFirstLevel = enchantLevel == 0;
-        renderInfoTooltip(entry, powerful, enchantLevel + 1, renderer, isFirstLevel, true, true, true, canAffordHoverOption);
+        renderInfoTooltip(entry, powerful, enchantLevel + 1, renderer, isFirstLevel, true, true, true, canAffordHoverOption, true, true);
     }
 
 }

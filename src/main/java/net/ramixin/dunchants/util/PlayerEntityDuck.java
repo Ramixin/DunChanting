@@ -1,4 +1,4 @@
-package net.ramixin.util;
+package net.ramixin.dunchants.util;
 
 import net.minecraft.entity.player.PlayerEntity;
 

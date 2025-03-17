@@ -38,5 +38,6 @@ public interface ModTextures {
     Identifier enchantmentOptionBackdrop = DungeonEnchants.id("container/enchanting_table/selection_small");
     SpriteIdentifier missingIcon = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.ofVanilla("missingno"));
 
+    Identifier anvilTextFieldBackdrop = DungeonEnchants.id("container/anvil/text_backdrop");
 
 }

@@ -34,22 +34,24 @@ public interface ModClientUtils {
         return enchantmentRegistry.getEntry(enchantmentReference.value());
     }
 
-    static SpriteIdentifier getEnchantmentIcon(String id, int index, SpriteIdentifier defaultIcon, boolean grayscale) {
+    static SpriteIdentifier getEnchantmentIcon(String id, int index, SpriteIdentifier defaultIcon, boolean grayscale, boolean large) {
         Identifier enchantId = Identifier.of(id);
         Optional<RegistryEntry.Reference<Enchantment>> enchantment = DungeonEnchantsClient.getEnchantmentRegistry().getEntry(enchantId);
-        if(enchantment.isEmpty()) return new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index, grayscale));
-        SpriteIdentifier spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId(enchantId.getPath(), index, grayscale));
-        if(spriteId.getSprite() == defaultIcon.getSprite()) return new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index, grayscale));
+        if(enchantment.isEmpty()) return new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index, grayscale, large));
+        SpriteIdentifier spriteId = new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId(enchantId.getPath(), index, grayscale, large));
+        if(spriteId.getSprite() == defaultIcon.getSprite()) return new SpriteIdentifier(DungeonEnchantsClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index, grayscale, large));
         return spriteId;
     }
 
-    static Identifier getEnchantmentIconId(String id, int index, boolean grayscale) {
+    static Identifier getEnchantmentIconId(String id, int index, boolean grayscale, boolean large) {
         StringBuilder builder = new StringBuilder();
         if(grayscale) {
-            if(index == 0) builder.append("generated/grayscale/small/");
+            if(large) builder.append("generated/grayscale/large/");
+            else if(index == 0) builder.append("generated/grayscale/small/");
             else builder.append("generated/grayscale/");
         } else {
-            if(index == 0) builder.append("small/");
+            if(large) builder.append("large/");
+            else if(index == 0) builder.append("small/");
             else builder.append("generated/");
         }
         builder.append(id);
