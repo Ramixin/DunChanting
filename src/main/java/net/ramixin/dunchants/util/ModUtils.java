@@ -307,13 +307,24 @@ public interface ModUtils {
         return player.isCreative();
     }
 
-    static boolean markAsUnavailable(ItemStack stack, int hoveringIndex, String enchant) {
-        EnchantmentOptions options = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, EnchantmentOptions.DEFAULT);
-        SelectedEnchantments selected = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
+    static boolean markAsUnavailable(ItemStack stack, int hoveringIndex, String enchant, Registry<Enchantment> registry) {
+        SelectedEnchantments selectedEnchantments = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
+        EnchantmentOptions enchantmentOptions = stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
+        if(enchantmentOptions == null) return false;
         int index = hoveringIndex / 3;
+        RegistryEntry<Enchantment> enchantValue = registry.getEntry(registry.get(Identifier.of(enchant)));
+        return doSelectionsForbid(enchant, selectedEnchantments, enchantmentOptions, index, registry, enchantValue);
+    }
+
+    static boolean doSelectionsForbid(String enchant, SelectedEnchantments selectedEnchantments, EnchantmentOptions enchantmentOptions, int index, Registry<Enchantment> registry, RegistryEntry<Enchantment> enchantValue) {
         for(int i = 0; i < 3; i++)
-            if(selected.hasSelection(i))
-                if(i != index && options.get(i).get(selected.get(i)).equals(enchant)) return true;
+            if(selectedEnchantments.hasSelection(i)) {
+                String otherEnchant = enchantmentOptions.get(i).get(selectedEnchantments.get(i));
+                if (i == index) return false;
+                if(otherEnchant.equals(enchant)) return true;
+                RegistryEntry<Enchantment> otherValue = registry.getEntry(registry.get(Identifier.of(otherEnchant)));
+                if(!Enchantment.canBeCombined(enchantValue, otherValue)) return true;
+            }
         return false;
     }
 

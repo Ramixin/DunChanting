@@ -9,6 +9,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Language;
 import net.ramixin.dunchants.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchants.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchants.client.util.ModClientUtils;
@@ -43,6 +44,7 @@ public class GrindstoneHoverManager extends AbstractUIHoverManager {
     @Override
     public void render(AbstractEnchantmentUIElement element, ItemStack stack, DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY, int relX, int relY) {
         changePointColor = false;
+        //noinspection DuplicatedCode
         if(activeHoverOption == -1) return;
         int optionIndex = activeHoverOption % 3;
         int index = activeHoverOption / 3;
@@ -64,7 +66,7 @@ public class GrindstoneHoverManager extends AbstractUIHoverManager {
         renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, false, true, true);
         renderer.resetHeight();
 
-        String clickText = "Click to disenchant";
+        String clickText = Language.getInstance().get("container.grindstone.disenchant");
         List<String> rawClickText = ModUtils.textWrapString(clickText, 20);
         List<Text> finalClickText = new ArrayList<>();
         int clickWidth = ModUtils.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, Formatting.GREEN);
@@ -73,7 +75,7 @@ public class GrindstoneHoverManager extends AbstractUIHoverManager {
         int attribution = ModUtils.getAttributionOnItem(playerUUID, stack, index);
         if(attribution <= 0) return;
         changePointColor = true;
-        String attributionText = String.format("+%s Enchantment Points", attribution);
+        String attributionText = String.format(Language.getInstance().get("container.grindstone.attribution"), attribution, attribution == 1 ? "" : "s");
         List<String> rawAttributionText = ModUtils.textWrapString(attributionText, 20);
         List<Text> finalAttributionText = new ArrayList<>();
         int attributionWidth = ModUtils.convertStringListToText(rawAttributionText, finalAttributionText, renderer::getTextWidth, Formatting.LIGHT_PURPLE);

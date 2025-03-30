@@ -20,7 +20,8 @@ import net.ramixin.dunchants.util.ModUtils;
 
 import java.util.Optional;
 
-import static net.ramixin.dunchants.client.enchantmentui.ModUIUtils.*;
+import static net.ramixin.dunchants.client.enchantmentui.ModUIUtils.renderInfoTooltip;
+import static net.ramixin.dunchants.client.enchantmentui.ModUIUtils.renderUnavailableTooltip;
 
 public class EnchantmentTableHoverManager extends AbstractUIHoverManager {
 
@@ -81,7 +82,7 @@ public class EnchantmentTableHoverManager extends AbstractUIHoverManager {
         RegistryEntry<Enchantment> entry = ModClientUtils.idToEntry(enchantId);
         int enchantLevel = EnchantmentHelper.getLevel(entry, stack);
         if(entry == null) return;
-        canAffordHoverOption = ModUtils.canAfford(entry, stack, MinecraftClient.getInstance().player);
+        canAffordHoverOption = ModUtils.canAfford(entry, stack, MinecraftClient.getInstance().player) || enchantLevel >= 3;
         boolean powerful = entry.isIn(ModTags.POWERFUL_ENCHANTMENT);
         TooltipRenderer renderer = new TooltipRenderer(context, textRenderer, mouseX, mouseY);
         if(ModClientUtils.markAsUnavailable(element, activeHoverOption, enchant)) {
@@ -89,7 +90,7 @@ public class EnchantmentTableHoverManager extends AbstractUIHoverManager {
             return;
         }
         if(element.getSelectedEnchantments().hasSelection(index)) renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, canAffordHoverOption, true, true);
-        if(enchantLevel >= 3) return;
+        if(enchantLevel >= entry.value().getMaxLevel()) return;
         renderer.resetHeight();
         boolean isFirstLevel = enchantLevel == 0;
         renderInfoTooltip(entry, powerful, enchantLevel + 1, renderer, isFirstLevel, true, true, true, canAffordHoverOption, true, true);

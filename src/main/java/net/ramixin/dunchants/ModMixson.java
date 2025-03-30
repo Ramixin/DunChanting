@@ -28,7 +28,13 @@ public class ModMixson {
                 Mixson.DEFAULT_PRIORITY,
                 id -> id.getPath().startsWith("enchantment/"),
                 "ChangeEnchantmentMaxLevel",
-                context -> context.getFile().getAsJsonObject().addProperty("max_level", 3),
+                context -> {
+                    JsonObject file = context.getFile().getAsJsonObject();
+                    if(context.getResourceId().getNamespace().equals("minecraft"))
+                        file.addProperty("max_level", 3);
+                    else
+                        file.addProperty("max_level", Math.min(3, file.get("max_level").getAsInt()));
+                },
                 true
         );
 

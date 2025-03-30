@@ -10,6 +10,7 @@ import net.ramixin.dunchants.client.DungeonEnchantsClient;
 import net.ramixin.dunchants.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchants.items.components.EnchantmentOptions;
 import net.ramixin.dunchants.items.components.SelectedEnchantments;
+import net.ramixin.dunchants.util.ModUtils;
 
 import java.util.Optional;
 
@@ -60,18 +61,23 @@ public interface ModClientUtils {
     }
 
     static boolean markAsUnavailable(AbstractEnchantmentUIElement element, int hoveringIndex, String enchant) {
+        Registry<Enchantment> registry = DungeonEnchantsClient.getEnchantmentRegistry();
         SelectedEnchantments selectedEnchantments = element.getSelectedEnchantments();
         EnchantmentOptions enchantmentOptions = element.getEnchantmentOptions();
         int index = hoveringIndex / 3;
-        for(int i = 0; i < 3; i++)
-            if(selectedEnchantments.hasSelection(i))
-                if(i != index && enchantmentOptions.get(i).get(selectedEnchantments.get(i)).equals(enchant)) return true;
+        if(selectedEnchantments.hasSelection(index)) return false;
+        RegistryEntry<Enchantment> enchantValue = registry.getEntry(registry.get(Identifier.of(enchant)));
+        if(ModUtils.doSelectionsForbid(enchant, selectedEnchantments, enchantmentOptions, index, registry, enchantValue))
+            return true;
         int hovering = element.getHoverManager().getActiveHoverOption();
         if(hovering == hoveringIndex) return false;
         Optional<String> hoveringEnchantment = getHoveredEnchantment(element);
-        return hoveringEnchantment.map(string -> string.equals(enchant)).orElse(false);
-
+        if(hoveringEnchantment.isEmpty()) return false;
+        String hoveringEnchant = hoveringEnchantment.get();
+        RegistryEntry<Enchantment> hoveringValue = registry.getEntry(registry.get(Identifier.of(hoveringEnchant)));
+        return !Enchantment.canBeCombined(enchantValue, hoveringValue);
     }
+
     static Optional<String> getHoveredEnchantment(AbstractEnchantmentUIElement element) {
         EnchantmentOptions enchantmentOptions = element.getEnchantmentOptions();
         int hovering = element.getHoverManager().getActiveHoverOption();

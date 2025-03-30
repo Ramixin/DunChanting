@@ -9,6 +9,7 @@ import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.Language;
 import net.ramixin.dunchants.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchants.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchants.client.util.ModClientUtils;
@@ -55,13 +56,13 @@ public class EnchantedBookHoverManager extends AbstractUIHoverManager {
 
         ItemStack primary = enchantedBookElement.getEnchantableStack();
         if(primary.canBeEnchantedWith(entry, EnchantingContext.ACCEPTABLE)) {
-            String clickText = "Click to transfer enchantment";
+            String clickText = Language.getInstance().get("container.anvil.transfer");
             List<String> rawClickText = ModUtils.textWrapString(clickText, 20);
             List<Text> finalClickText = new ArrayList<>();
             int clickWidth = ModUtils.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, Formatting.BLUE);
             renderer.render(finalClickText, -30 - clickWidth, 0);
         } else {
-            String clickText = "Item does not support this enchantment";
+            String clickText = Language.getInstance().get("container.anvil.unsupported");
             List<String> rawClickText = ModUtils.textWrapString(clickText, 20);
             List<Text> finalClickText = new ArrayList<>();
             int clickWidth = ModUtils.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, Formatting.RED);

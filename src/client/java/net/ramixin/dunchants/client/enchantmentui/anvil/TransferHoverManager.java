@@ -48,13 +48,13 @@ public class TransferHoverManager extends AbstractUIHoverManager {
             renderUnavailableTooltip(entry, powerful, renderer);
             return;
         }
-        renderer.render(List.of(Text.literal("Replacing").formatted(Formatting.RED)), 0, 0);
+        renderer.render(List.of(Text.translatable("container.anvil.replacing").formatted(Formatting.RED)), 0, 0);
         renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, false, false, false);
         renderer.resetHeight();
 
         RegistryEntry<Enchantment> transferSelection = transferElement.getTransferSelection();
         boolean transferPowerful = transferSelection.isIn(ModTags.POWERFUL_ENCHANTMENT);
-        renderer.render(List.of(Text.literal("Transferring").formatted(Formatting.GREEN)), - 30 - 68, 0);
+        renderer.render(List.of(Text.translatable("container.anvil.transferring").formatted(Formatting.GREEN)), - 30 - 68, 0);
         renderInfoTooltip(transferSelection, transferPowerful, 1, renderer, true, false, false, true, false, false, false);
     }
 

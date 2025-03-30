@@ -32,6 +32,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     @Unique
     private int enchantmentPoints;
 
+    @Unique
+    private int highestEnchantmentPoints;
+
     protected PlayerEntityMixin(EntityType<? extends LivingEntity> entityType, World world) {
         super(entityType, world);
     }
@@ -55,17 +58,23 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
     private void writeEnchantmentPointsToData(NbtCompound nbt, CallbackInfo ci) {
         nbt.putInt("EnchantmentPoints", enchantmentPoints);
+        nbt.putInt("HighestEnchantmentPoints", highestEnchantmentPoints);
     }
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void readEnchantmentPointsFromData(NbtCompound nbt, CallbackInfo ci) {
         enchantmentPoints = nbt.getInt("EnchantmentPoints");
+        highestEnchantmentPoints = nbt.getInt("HighestEnchantmentPoints");
     }
 
     @Inject(method = "addExperienceLevels", at = @At("TAIL"))
     private void grantEnchantmentPointOnLevelUp(int levels, CallbackInfo ci) {
         if(levels == 0) return;
-        enchantmentPoints += levels;
+        int levelsToAdd;
+        if(highestEnchantmentPoints > this.experienceLevel) levelsToAdd = levels - ( this.experienceLevel - highestEnchantmentPoints );
+        else levelsToAdd = levels;
+        if(levelsToAdd < 0) return;
+        enchantmentPoints += levelsToAdd;
         //noinspection ConstantValue
         if(!(((LivingEntity) this) instanceof ServerPlayerEntity serverPlayer)) return;
         ServerPlayNetworking.send(serverPlayer, new EnchantmentPointsUpdateS2CPayload(enchantmentPoints));

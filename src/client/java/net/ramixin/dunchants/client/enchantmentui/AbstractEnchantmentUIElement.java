@@ -95,7 +95,7 @@ public abstract class AbstractEnchantmentUIElement {
 
         context.drawGuiTexture(RenderLayer::getGuiTextured, selectedEnchantmentBackdrops[enchantLevel-1], relX - 1 + 57 * index, relY + 19, 64, 64);
 
-        SpriteIdentifier largeEnchant = ModClientUtils.getEnchantmentIcon(enchant, 0, missingIcon, renderGrayscale[index * 3], true);
+        SpriteIdentifier largeEnchant = ModClientUtils.getEnchantmentIcon(enchant, 0, missingIcon, renderGrayscale[index * 3 + enchantIndex], true);
         context.drawSpriteStretched(RenderLayer::getGuiTextured, largeEnchant.getSprite(), relX - 1 + 57 * index, relY + 19, 64, 64);
     }
 

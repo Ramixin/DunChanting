@@ -58,7 +58,8 @@ public class ModGrindstoneScreen extends HandledScreen<ModGrindstoneScreenHandle
         } else {
             secondText = String.valueOf(points + ModUtils.getAttributionOnItem(playerUUID, handler.getSlot(0).getStack(), element.getActiveHoverOption() / 3));
         }
-        context.drawText(textRenderer, Text.of(secondText), relX + 117 - width / 2, relY + 10, color, false);
+        int secondWith = textRenderer.getWidth(secondText);
+        context.drawText(textRenderer, Text.of(secondText), relX + 117 - secondWith / 2, relY + 10, color, false);
 
         this.drawMouseoverTooltip(context, mouseX, mouseY);
     }

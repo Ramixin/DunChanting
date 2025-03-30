@@ -6,9 +6,14 @@ import net.minecraft.component.ComponentMap;
 import net.minecraft.component.ComponentType;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.text.MutableText;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.world.World;
 import net.ramixin.dunchants.enchantments.LeveledEnchantmentEffect;
 import net.ramixin.dunchants.util.EnchantmentDuck;
+import net.ramixin.dunchants.util.ModTags;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
@@ -27,6 +32,13 @@ public abstract class EnchantmentMixin implements EnchantmentDuck {
     @ModifyReturnValue(method = "isAcceptableItem", at = @At(value = "RETURN"))
     private boolean preventMoreThanThreeEnchantments(boolean original, @Local(argsOnly = true) ItemStack itemStack) {
         return original && itemStack.getEnchantments().getEnchantments().size() < 3;
+    }
+
+    @ModifyReturnValue(method = "getName", at = @At("RETURN"))
+    private static Text changeNameColor(Text original, @Local(argsOnly = true) RegistryEntry<Enchantment> entry) {
+        if(!(original instanceof MutableText text)) return original;
+        if(entry.isIn(ModTags.POWERFUL_ENCHANTMENT)) return text.formatted(Formatting.DARK_PURPLE);
+        return text.formatted(Formatting.DARK_AQUA);
     }
 
 }

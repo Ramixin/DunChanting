@@ -13,9 +13,16 @@
   "container.enchant.powerful.2": "Costs 3 Enchantment Point",
   "container.enchant.powerful.3": "Costs 4 Enchantment Point",
 
-  "container.enchant.already_exists": "This enchantment already exists on the item",
-
+  "container.enchant.already_exists": "The item cannot support this enchantment",
   "container.enchant.unknown_desc": "A mysterious enchantment...",
+
+  "container.grindstone.disenchant": "Click to disenchant",
+  "container.grindstone.attribution": "+%s Enchantment Point%s",
+
+  "container.anvil.transfer": "Click to transfer enchantment",
+  "container.anvil.unsupported": "Item does not support this enchantment",
+  "container.anvil.replacing": "Replacing",
+  "container.anvil.transferring": "Transferring",
 
   "enchantment.minecraft.mending.desc": "Repairs tool durability when experience is absorbed",
   "enchantment.minecraft.mending.desc.1": "1x Repair Multiplier",

@@ -9,6 +9,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.*;
 import net.minecraft.server.network.ServerPlayerEntity;
@@ -104,7 +105,7 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
         if(lapisLevel < enchantLevel + 1 && !player.isCreative()) return;
         boolean canAfford = ModUtils.canAfford(entry, stack, player);
         if(!canAfford) return;
-        boolean markedAsUnavailable = ModUtils.markAsUnavailable(stack, id, enchant);
+        boolean markedAsUnavailable = ModUtils.markAsUnavailable(stack, id, enchant, player.getWorld().getRegistryManager().getOrThrow(RegistryKeys.ENCHANTMENT));
         if(markedAsUnavailable) return;
         int cost = ModUtils.getEnchantingCost(entry, stack);
         lapisStack.decrement(enchantLevel + 1);

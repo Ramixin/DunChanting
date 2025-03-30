@@ -53,15 +53,12 @@ public interface ModUIUtils {
     }
 
     static void renderNameText(RegistryEntry<Enchantment> enchantment, boolean powerful, int level, TooltipRenderer renderer, boolean darkenText, Function<Integer, Integer> offsetCalculator, boolean showLevel) {
-        Formatting nameColor;
-        if(powerful)
-            nameColor = darkenText ? Formatting.DARK_PURPLE : Formatting.LIGHT_PURPLE;
-        else
-            nameColor = darkenText ? Formatting.DARK_AQUA : Formatting.AQUA;
         Text tempText;
         if(showLevel) tempText = Enchantment.getName(enchantment, level);
         else tempText = enchantment.value().description();
-        Text enchantmentName = tempText.copy().formatted(nameColor);
+        Text enchantmentName;
+        if(darkenText) enchantmentName =  tempText.copy().formatted(!powerful ? Formatting.LIGHT_PURPLE : Formatting.AQUA);
+        else enchantmentName = tempText;
         int nameWidth = renderer.getTextWidth(enchantmentName);
         renderer.render(List.of(enchantmentName), offsetCalculator.apply(nameWidth), 1);
     }
