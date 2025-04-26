@@ -1,0 +1,23 @@
+{
+  "required": true,
+  "package": "net.ramixin.dunchanting.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "LivingEntityMixin",
+    "PlayerEntityMixin",
+    "PlayerManagerMixin",
+    "anvil.AnvilScreenHandlerMixin",
+    "anvil.ForgingScreenHandlerMixin",
+    "anvil.ScreenHandlerMixin",
+    "attribution.ItemEntityMixin",
+    "attribution.LevelPropertiesMixin",
+    "enchantments.ArmorSlotMixin",
+    "enchantments.EnchantmentHelperMixin",
+    "enchantments.EnchantmentMixin",
+    "etable.EnchantmentScreenHandlerMixin",
+    "grindstone.GrindStoneBlockMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}

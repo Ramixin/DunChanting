@@ -1,47 +1,40 @@
 {
 	"schemaVersion": 1,
-	"id": "dungeon_enchants",
+	"id": "dunchanting",
 	"version": "${version}",
-	"name": "Dungeon Enchants",
-	"description": "This is an example description! Tell everyone what your mod is about!",
+	"name": "DunChanting",
+	"description": "A mod that faithfully ports the Minecraft Dungeons enchanting system to Java",
 	"authors": [
-		"Me!"
+		"Ramixin"
 	],
-	"contact": {
-		"homepage": "https://fabricmc.net/",
-		"sources": "https://github.com/FabricMC/fabric-example-mod"
-	},
-	"license": "CC0-1.0",
-	"icon": "assets/dungeon_enchants/icon.png",
+	"license": "MIT",
+	"icon": "assets/dunchanting/icon.png",
 	"environment": "*",
-	"accessWidener": "dungeons_enchants.accesswidener",
+	"accessWidener": "dunchanting.accesswidener",
 	"entrypoints": {
 		"main": [
-			"net.ramixin.dunchants.DungeonEnchants"
+			"net.ramixin.dunchanting.Dunchanting"
 		],
 		"client": [
-			"net.ramixin.dunchants.client.DungeonEnchantsClient"
+			"net.ramixin.dunchanting.client.DunchantingClient"
 		]
 	},
 	"mixins": [
-		"dungeon_enchants.mixins.json",
+		"dunchanting.mixins.json",
 		{
-			"config": "dungeon_enchants.client.mixins.json",
+			"config": "dunchanting.client.mixins.json",
 			"environment": "client"
 		}
 	],
 	"depends": {
 		"fabricloader": ">=0.15.11",
-		"minecraft": "~1.21",
+		"minecraft": "1.21.4",
 		"java": ">=21",
 		"fabric-api": "*"
 	},
-	"suggests": {
-		"another-mod": "*"
-	},
 	"custom": {
 		"mixson": [
-			"net.ramixin.dunchants.ModMixson"
+			"net.ramixin.dunchanting.ModMixson"
 		]
 	}
 }

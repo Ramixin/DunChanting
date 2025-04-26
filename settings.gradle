@@ -4,7 +4,25 @@ pluginManagement {
 			name = 'Fabric'
 			url = 'https://maven.fabricmc.net/'
 		}
+
+		maven { url = "https://maven.kikugie.dev/releases" }
+		maven { url = "https://maven.kikugie.dev/snapshots" }
+
 		mavenCentral()
 		gradlePluginPortal()
+	}
+}
+
+plugins {
+	id "dev.kikugie.stonecutter" version "0.6-beta.2"
+}
+
+stonecutter {
+	kotlinController = false
+	centralScript = "build.gradle"
+
+	//noinspection GroovyAssignabilityCheck
+	create(getRootProject()) {
+		versions "1.21.1", "1.21.4"
 	}
 }

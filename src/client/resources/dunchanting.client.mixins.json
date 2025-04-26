@@ -1,0 +1,16 @@
+{
+  "required": true,
+  "package": "net.ramixin.dunchanting.client.mixins",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "AnvilScreenMixin",
+    "BakedModelManagerMixin",
+    "ElementMixin",
+    "EnchantmentScreenMixin",
+    "HandledScreenMixin",
+    "InGameHudMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+	}
+}
