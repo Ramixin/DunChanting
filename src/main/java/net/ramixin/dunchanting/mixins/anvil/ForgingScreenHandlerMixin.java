@@ -40,8 +40,11 @@ public abstract class ForgingScreenHandlerMixin extends ScreenHandler {
     }
     //?} else {
     /*@WrapOperation(method = "addPlayerInventorySlots", at = @At(value = "NEW", target = "(Lnet/minecraft/inventory/Inventory;III)Lnet/minecraft/screen/slot/Slot;"))
-    private Slot movePlayerSlots(Inventory inventory, int index, int x, int y, Operation<Slot> original) {
-        return original.call(inventory, index, x, y + 16);
+    private Slot movePlayerSlots(Inventory inventory, int index, int i, int j, Operation<Slot> original) {
+        int y;
+        if(((ScreenHandler)this) instanceof AnvilScreenHandler) y = j + 16;
+        else y = j;
+        return original.call(inventory, index, i, y);
     }
     *///?}
 
