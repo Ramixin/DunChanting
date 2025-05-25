@@ -23,6 +23,6 @@ stonecutter {
 
 	//noinspection GroovyAssignabilityCheck
 	create(getRootProject()) {
-		versions "1.21.1", "1.21.4"
+		versions "1.21.1", "1.21.5"
 	}
 }

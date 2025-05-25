@@ -1,6 +1,5 @@
 package net.ramixin.dunchanting.client.enchantmentui.anvil;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
@@ -40,8 +39,7 @@ public class EnchantedBookElement extends AbstractEnchantmentUIElement {
 
     @Override
     protected EnchantmentOptions generateOptions(ItemStack stack) {
-        if(MinecraftClient.getInstance().world == null) throw new IllegalStateException("world is null");
-        List<RegistryEntry<Enchantment>> orderedEnchants = ModUtils.getOrderedEnchantments(stack, MinecraftClient.getInstance().world.getRegistryManager());
+        List<RegistryEntry<Enchantment>> orderedEnchants = ModUtils.getOrderedEnchantments(stack);
         EnchantmentOption[] options = new EnchantmentOption[3];
         for(int i = 0; i < Math.min(orderedEnchants.size(), 3); i++) {
             String enchant = orderedEnchants.get(i).getIdAsString();
@@ -56,7 +54,7 @@ public class EnchantedBookElement extends AbstractEnchantmentUIElement {
         SelectedEnchantments selected = SelectedEnchantments.DEFAULT;
         for(int i = 0; i < 3; i++) {
             if(options.isLocked(i)) break;
-            selected = selected.enchantOption(i, 0);
+            selected = selected.with(i, 0);
         }
         return selected;
     }

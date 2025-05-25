@@ -1,6 +1,8 @@
 {
 
   "commands.player.enchantment_points.negative": "Player can not have negative enchantment points",
+  "commands.player.enchantment_points.reroll.success": "Successfully rerolled item enchantments",
+  "commands.player.enchantment_points.player_not_found": "Command must be run by player",
   "commands.player.enchantment_points.get": "%s has %s enchantment point%s",
   "commands.player.enchantment_points.set": "Set %s's enchantment points to %s",
   "commands.player.enchantment_points.add": "Added %s enchantment point%s to %s",
@@ -15,6 +17,8 @@
 
   "container.enchant.already_exists": "The item cannot support this enchantment",
   "container.enchant.unknown_desc": "A mysterious enchantment...",
+  "container.enchant.unlock": "Click to unlock",
+  "container.enchant.locked": "Enchantment slot is locked",
 
   "container.grindstone.disenchant": "Click to disenchant",
   "container.grindstone.attribution": "+%s Enchantment Point%s",

@@ -7,6 +7,8 @@ import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+
 public class ModMixson {
 
     private static final JsonObject CHANCE_REQUIREMENT;
@@ -27,13 +29,29 @@ public class ModMixson {
         Mixson.registerEvent(
                 Mixson.DEFAULT_PRIORITY,
                 id -> id.getPath().startsWith("enchantment/"),
-                "ChangeEnchantmentMaxLevel",
+                "NormalizeEnchantments",
                 context -> {
                     JsonObject file = context.getFile().getAsJsonObject();
-                    if(context.getResourceId().getNamespace().equals("minecraft"))
+                    boolean hasCompat;
+                    //Apply compats
+                    if(file.has("dunchanting:compats")) {
+                        hasCompat = true;
+                        JsonObject effects = file.getAsJsonObject("effects");
+                        for(Map.Entry<String, JsonElement> entry : effects.entrySet()) {
+                            if(entry.getKey().equals("!dunchanting:remove"))
+                                for(JsonElement effect : entry.getValue().getAsJsonArray()) effects.remove(effect.getAsString());
+                            else
+                                effects.add(entry.getKey(), entry.getValue());
+                        }
+                    } else hasCompat = false;
+
+                    //Change max level
+                    if(context.getResourceId().getNamespace().equals("minecraft") || hasCompat)
                         file.addProperty("max_level", 3);
                     else
                         file.addProperty("max_level", Math.min(3, file.get("max_level").getAsInt()));
+
+
                 },
                 true
         );

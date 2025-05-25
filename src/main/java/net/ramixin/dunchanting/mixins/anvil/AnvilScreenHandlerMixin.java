@@ -3,10 +3,13 @@ package net.ramixin.dunchanting.mixins.anvil;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import net.minecraft.component.DataComponentTypes;
+import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -17,10 +20,7 @@ import net.ramixin.dunchanting.items.components.EnchantmentOptions;
 import net.ramixin.dunchanting.util.ClickableHandler;
 import net.ramixin.dunchanting.util.ModUtils;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.asm.mixin.Final;
-import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Shadow;
-import org.spongepowered.asm.mixin.Unique;
+import org.spongepowered.asm.mixin.*;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -28,6 +28,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import java.util.List;
 import java.util.function.Predicate;
 
+@Debug(export = true)
 @Mixin(AnvilScreenHandler.class)
 public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler implements ClickableHandler {
 
@@ -99,7 +100,7 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler imple
                 ci.cancel();
                 return;
             }
-            List<RegistryEntry<Enchantment>> orderedEnchantments = ModUtils.getOrderedEnchantments(secondary, player.getWorld().getRegistryManager());
+            List<RegistryEntry<Enchantment>> orderedEnchantments = ModUtils.getOrderedEnchantments(secondary);
             RegistryEntry<Enchantment> replacement = orderedEnchantments.get(replacementEnchantment / 3);
             EnchantmentOptions newOptions = options.modify(replacement.getIdAsString(), replacingEnchantment / 3, replacingEnchantment % 3);
             copy.set(ModItemComponents.ENCHANTMENT_OPTIONS, newOptions);
@@ -111,6 +112,31 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler imple
             this.replacingEnchantment = -1;
             this.replacementEnchantment = -1;
         }
+    }
+
+    @WrapOperation(method = "onTakeOutput", at = @At(value = "INVOKE", target = "Lnet/minecraft/inventory/Inventory;setStack(ILnet/minecraft/item/ItemStack;)V", ordinal = 2))
+    private void updateEnchantmentsOnEnchantedBook(Inventory instance, int i, ItemStack ignored, Operation<Void> original) {
+        ItemStack stack = this.input.getStack(1);
+        if(stack.getItem() != Items.ENCHANTED_BOOK) {
+            original.call(instance, i, stack);
+            return;
+        }
+        ItemEnchantmentsComponent enchantments = stack.get(DataComponentTypes.STORED_ENCHANTMENTS);
+        if(enchantments == null) {
+            original.call(instance, i, stack);
+            return;
+        }
+        List<RegistryEntry<Enchantment>> orderedEnchantments = ModUtils.getOrderedEnchantments(stack);
+        RegistryEntry<Enchantment> enchantmentEntry = orderedEnchantments.get(replacementEnchantment / 3);
+        int level = enchantments.getLevel(enchantmentEntry);
+        ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(enchantments);
+        if(level == 1) {
+            builder.remove(entry -> entry.equals(enchantmentEntry));
+        }
+        else builder.set(enchantmentEntry, level - 1);
+        ItemEnchantmentsComponent finalEnchants = builder.build();
+        stack.set(DataComponentTypes.STORED_ENCHANTMENTS, finalEnchants);
+        if(finalEnchants.isEmpty()) original.call(instance, i, ItemStack.EMPTY);
     }
 
     @ModifyReturnValue(method = "canTakeOutput", at = @At("RETURN"))

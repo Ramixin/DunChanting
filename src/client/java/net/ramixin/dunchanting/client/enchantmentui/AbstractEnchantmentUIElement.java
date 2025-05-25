@@ -3,7 +3,7 @@ package net.ramixin.dunchanting.client.enchantmentui;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.render.RenderLayer;
+/*? if >=1.21.2 {*/import net.minecraft.client.render.RenderLayer;/*?}*/
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
@@ -98,13 +98,13 @@ public abstract class AbstractEnchantmentUIElement {
         int enchantLevel = ModUtils.getEnchantmentLevel(enchantmentEntry, stack);
 
         context.drawGuiTexture(
-                //? if >=1.20.2 {
+                //? if >=1.21.2 {
                 RenderLayer::getGuiTextured,
                  //?}
                 selectedEnchantmentBackdrops[enchantLevel-1], relX - 1 + 57 * index, relY + 19, 64, 64);
 
         SpriteIdentifier largeEnchant = ModClientUtils.getEnchantmentIcon(enchant, 0, missingIcon, renderGrayscale[index * 3 + enchantIndex], true);
-        //? if >=1.20.2 {
+        //? if >=1.21.2 {
         context.drawSpriteStretched(RenderLayer::getGuiTextured, largeEnchant.getSprite(), relX - 1 + 57 * index, relY + 19, 64, 64);
         //?} else {
         /*context.drawSprite(relX - 1 + 57 * index, relY + 19, 0, 64, 64, largeEnchant.getSprite());
@@ -115,7 +115,7 @@ public abstract class AbstractEnchantmentUIElement {
     private void renderEnchantmentSlotOptions(DrawContext context, int index, int relX, int relY, Consumer<Runnable> delayedRenderCallback) {
         EnchantmentOption option = enchantmentOptions.get(index);
         context.drawGuiTexture(
-                //? if >=1.20.2 {
+                //? if >=1.21.2 {
                 RenderLayer::getGuiTextured,
                  //?}
                 optionsRomanNumerals[index], relX + 23 + 57 * index, relY + 29, 16, 16);
@@ -130,7 +130,7 @@ public abstract class AbstractEnchantmentUIElement {
 
         if(option.isLocked(optionIndex)) {
             context.drawGuiTexture(
-                    //? if >=1.20.2 {
+                    //? if >=1.21.2 {
                     RenderLayer::getGuiTextured,
                      //?}
                     lockedEnchantmentOption, x, y, 64, 64);
@@ -142,12 +142,12 @@ public abstract class AbstractEnchantmentUIElement {
         if(animationProgresses[animationIndex] > 0) {
             delayedRenderCallback.accept(() -> {
                 context.drawGuiTexture(
-                        //? if >=1.20.2 {
+                        //? if >=1.21.2 {
                         RenderLayer::getGuiTextured,
-                        //? }
+                        //?}
                         selectionAnimationTextures[animationProgresses[animationIndex] / (MILLIS_IN_ANIMATION / 12)], x, y, 64, 64);
                 SpriteIdentifier spriteId = getEnchantmentIcon(enchant, animationProgresses[animationIndex] / (MILLIS_IN_ANIMATION / 12), missingIcon, grayscale, false);
-                //? if >=1.20.2 {
+                //? if >=1.21.2 {
                 context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), x, y, 64, 64);
                  //?} else
                 /*context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());*/
@@ -156,16 +156,17 @@ public abstract class AbstractEnchantmentUIElement {
         }
 
         context.drawGuiTexture(
-                //? if >=1.20.2 {
+                //? if >=1.21.2 {
                 RenderLayer::getGuiTextured,
                 //?}
                 enchantmentOptionBackdrop, x, y, 64, 64);
 
         SpriteIdentifier spriteId = getEnchantmentIcon(enchant, 0, missingIcon, grayscale, false);
-        //? if >=1.20.2 {
+        //? if >=1.21.2 {
         context.drawSpriteStretched(RenderLayer::getGuiTextured, spriteId.getSprite(), x, y, 64, 64);
-         //?} else {
-        /*context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());*/
+        //?} else {
+        /*context.drawSprite(x, y, 0, 64, 64, spriteId.getSprite());
+        *///?}
     }
 
     public void updateMousePosition(double x, double y) {

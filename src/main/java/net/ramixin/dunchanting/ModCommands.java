@@ -177,8 +177,8 @@ public class ModCommands {
                                             context.getSource().sendFeedback(
                                                     () -> Text.translatable(
                                                             "commands.player.enchantment_points.add",
-                                                            points,
-                                                            points == 1 ? "" : "s",
+                                                            deltaPoints,
+                                                            deltaPoints == 1 ? "" : "s",
                                                             player.getName()
                                                     ),
                                                     false

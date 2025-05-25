@@ -1,6 +1,5 @@
 package net.ramixin.dunchanting.client.enchantmentui.anvil;
 
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -19,8 +18,7 @@ public class TransferElement extends AbstractEnchantmentUIElement {
     public TransferElement(ItemStack stack, ItemStack book, int transferSelection, AbstractUIHoverManager hoverManager, int relX, int relY) {
         super(stack, hoverManager, relX, relY);
         this.transferIndex = transferSelection;
-        if(MinecraftClient.getInstance().world == null) throw new IllegalStateException("World is null");
-        List<RegistryEntry<Enchantment>> orderedEnchantments = ModUtils.getOrderedEnchantments(book, MinecraftClient.getInstance().world.getRegistryManager());
+        List<RegistryEntry<Enchantment>> orderedEnchantments = ModUtils.getOrderedEnchantments(book);
         this.transferSelection = orderedEnchantments.get(transferSelection / 3);
         this.bookStack = book;
     }

@@ -36,7 +36,7 @@ public record EnchantmentOption(Optional<String> first, Optional<String> second,
         else return 3;
     }
 
-    public EnchantmentOption modify(String id, int optionId) {
+    public EnchantmentOption with(String id, int optionId) {
         return new EnchantmentOption(
                 optionId == 0 ? Optional.of(id) : first,
                 optionId == 1 ? Optional.of(id) : second,

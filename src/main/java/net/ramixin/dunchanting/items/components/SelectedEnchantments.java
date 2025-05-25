@@ -40,7 +40,7 @@ public record SelectedEnchantments(Optional<Integer> first, Optional<Integer> se
         return getOptional(index).orElseThrow();
     }
 
-    public SelectedEnchantments enchantOption(int index, int enchantmentIndex) {
+    public SelectedEnchantments with(int index, Integer enchantmentIndex) {
         if(index < 0 || index > 2) throw new IndexOutOfBoundsException("unexpected index: " + index);
         return switch (index) {
             case 0 -> new SelectedEnchantments(Optional.of(enchantmentIndex), second, third);

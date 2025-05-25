@@ -29,8 +29,14 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
 
     @Shadow public int experienceLevel;
 
+    @Shadow public abstract void addExperience(int experience);
+
+    @Shadow public float experienceProgress;
     @Unique
     private int enchantmentPoints;
+
+    @Unique
+    private int levelingMetaID = 1; // latest
 
     @Unique
     private int highestEnchantmentPoints;
@@ -41,7 +47,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
 
     @Inject(method = "getNextLevelExperience", at = @At("HEAD"), cancellable = true)
     private void changeXpProgression(CallbackInfoReturnable<Integer> cir) {
-        cir.setReturnValue(50 * (experienceLevel + 1));
+        cir.setReturnValue(25 * (experienceLevel) + 50);
     }
 
     @ModifyReturnValue(method =
@@ -73,8 +79,9 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
 
     @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
     private void readEnchantmentPointsFromData(NbtCompound nbt, CallbackInfo ci) {
-        enchantmentPoints = nbt.getInt("EnchantmentPoints");
-        highestEnchantmentPoints = nbt.getInt("HighestEnchantmentPoints");
+
+        enchantmentPoints = nbt.getInt("EnchantmentPoints") /*? >=1.21.5 >>*/.orElseThrow() ;
+        highestEnchantmentPoints = nbt.getInt("HighestEnchantmentPoints") /*? >=1.21.5 >>*/.orElseThrow() ;
     }
 
     @Inject(method = "addExperienceLevels", at = @At("TAIL"))
@@ -87,6 +94,7 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
         enchantmentPoints += levelsToAdd;
         //noinspection ConstantValue
         if(!(((LivingEntity) this) instanceof ServerPlayerEntity serverPlayer)) return;
+        if(serverPlayer.networkHandler == null) return;
         ServerPlayNetworking.send(serverPlayer, new EnchantmentPointsUpdateS2CPayload(enchantmentPoints));
     }
 
@@ -111,6 +119,22 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     @WrapOperation(method = "vanishCursedItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/enchantment/EnchantmentHelper;hasAnyEnchantmentsWith(Lnet/minecraft/item/ItemStack;Lnet/minecraft/component/ComponentType;)Z"))
     private boolean applyLeveledVanishingCurse(ItemStack stack, ComponentType<?> componentType, Operation<Boolean> original) {
         boolean val = original.call(stack, componentType);
-        return val | ModUtils.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_EQUIPMENT_DROP, getWorld(), stack);
+        return val || ModUtils.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_EQUIPMENT_DROP, getWorld(), stack);
+    }
+
+    @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
+    private void writeLevelingMetadata(NbtCompound nbt, CallbackInfo ci) {
+        nbt.putInt("levelingMetaID", levelingMetaID);
+    }
+
+    @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
+    private void readLevelingMetadata(NbtCompound nbt, CallbackInfo ci) {
+        levelingMetaID = nbt.getInt("levelingMetaID") /*? >=1.21.5 >>*/.orElseThrow() ;
+
+        if(levelingMetaID == 0) {
+            int points = (int) (12.5 * Math.pow(this.experienceLevel + this.experienceProgress, 2));
+            addExperience(points);
+            levelingMetaID = 1;
+        }
     }
 }

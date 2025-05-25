@@ -82,9 +82,10 @@ public interface ModClientUtils {
         EnchantmentOptions enchantmentOptions = element.getEnchantmentOptions();
         int hovering = element.getHoverManager().getActiveHoverOption();
         if(hovering == -1) return Optional.empty();
-        int index = hovering / 3;
+        int absHovering = Math.abs(hovering);
+        int index = absHovering / 3;
         if(enchantmentOptions.isLocked(index)) return Optional.empty();
-        int optionIndex = hovering % 3;
+        int optionIndex = absHovering % 3;
         return enchantmentOptions.get(index).getOptional(optionIndex);
     }
 }

@@ -6,8 +6,12 @@ import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
+/*? >=1.21.5 {*/
+import net.minecraft.predicate.component.ComponentSubPredicate;
+/*?} else {*/
+/*import net.minecraft.predicate.item.ComponentSubPredicate;
 import net.minecraft.item.ItemStack;
-import net.minecraft.predicate.item.ComponentSubPredicate;
+*//*?}*/
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryFixedCodec;
@@ -26,7 +30,7 @@ public record EnchantmentLevelChancePredicate(RegistryEntry<Enchantment> enchant
     }
 
     @Override
-    public boolean test(ItemStack stack, ItemEnchantmentsComponent component) {
+    public boolean test(/*? <1.21.5 {*//*ItemStack stack,*//*?}*/ ItemEnchantmentsComponent component) {
         int level = component.getLevel(enchantment);
         return level >= RANDOM.nextBetween(1, 3);
     }

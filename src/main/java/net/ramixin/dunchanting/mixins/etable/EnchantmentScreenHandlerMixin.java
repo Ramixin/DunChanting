@@ -1,6 +1,5 @@
 package net.ramixin.dunchanting.mixins.etable;
 
-import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
@@ -12,16 +11,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.*;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.ramixin.dunchanting.items.ModItemComponents;
-import net.ramixin.dunchanting.items.components.Attributions;
 import net.ramixin.dunchanting.items.components.EnchantmentOption;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
-import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.dunchanting.util.ModUtils;
 import net.ramixin.dunchanting.util.PlayerEntityDuck;
 import org.jetbrains.annotations.Nullable;
@@ -56,7 +52,8 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
 
     @Inject(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At("TAIL"))
     private void setPlayerLevel(int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, CallbackInfo ci) {
-        playerLevel = playerInventory.player.experienceLevel;
+        if(playerInventory.player.isCreative()) playerLevel = 30;
+        else playerLevel = playerInventory.player.experienceLevel;
     }
 
     @ModifyArgs(method = "<init>(ILnet/minecraft/entity/player/PlayerInventory;Lnet/minecraft/screen/ScreenHandlerContext;)V", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/EnchantmentScreenHandler$2;<init>(Lnet/minecraft/screen/EnchantmentScreenHandler;Lnet/minecraft/inventory/Inventory;III)V"))
@@ -104,13 +101,35 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
         ItemStack stack = this.inventory.getStack(0);
         EnchantmentOptions options = stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
         if(options == null) return;
+
+        if(id == -1) return;
+        if(id < 0) {
+            if(!options.isLocked(-id / 3)) return;
+            PlayerEntityDuck duck = PlayerEntityDuck.get(player);
+            int points = duck.dungeonEnchants$getEnchantmentPoints();
+            if(points < 1) return;
+            EnchantmentOptions newOptions = ModUtils.rerollOption(player.getWorld(), stack, options, playerLevel, -id/3);
+            if(newOptions == null) return;
+            stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, newOptions);
+            if(!player.isCreative()) {
+                ModUtils.updateAttributions(stack, 3, 1, player);
+                ModUtils.applyPointsAndSend(player, PlayerEntityDuck.get(player)::dungeonEnchants$changeEnchantmentPoints, -1);
+            }
+
+            this.onContentChanged(this.inventory);
+            player.getWorld().playSound(null, BlockPos.ofFloored(player.getPos()), SoundEvents.UI_BUTTON_CLICK.value(), SoundCategory.BLOCKS, 1.0F, player.getWorld().getRandom().nextFloat() * 0.1F + 0.9F);
+            return;
+        }
+
         if(options.isLocked(id / 3)) return;
         EnchantmentOption option = options.get(id / 3);
         if(option.isLocked(id % 3)) return;
         String enchant = option.get(id % 3);
         RegistryEntry<Enchantment> entry = ModUtils.idToEntry(Identifier.of(enchant), player.getWorld());
+        if(entry == null) return;
+        if(entry.value() == null) return;
         int enchantLevel = EnchantmentHelper.getLevel(entry, stack);
-        if(enchantLevel >= 3) return;
+        if(enchantLevel >= entry.value().getMaxLevel()) return;
         ItemStack lapisStack = this.inventory.getStack(1);
         int lapisLevel = lapisStack.isEmpty() ? 0 : lapisStack.getCount();
         if(lapisLevel < enchantLevel + 1 && !player.isCreative()) return;
@@ -129,16 +148,8 @@ public abstract class EnchantmentScreenHandlerMixin extends ScreenHandler {
         stack.set(DataComponentTypes.ENCHANTMENTS, builder.build());
         ModUtils.enchantEnchantmentOption(stack, id/3, id % 3);
         if(!player.isCreative()) {
-            if(!stack.contains(ModItemComponents.ATTRIBUTIONS)) stack.set(ModItemComponents.ATTRIBUTIONS, Attributions.createNew());
-            Attributions attributions = stack.get(ModItemComponents.ATTRIBUTIONS);
-            //noinspection DataFlowIssue
-            attributions.addAttribute(id / 3, player.getUuid(), cost);
-            stack.set(ModItemComponents.ATTRIBUTIONS, attributions);
-            if(player instanceof ServerPlayerEntity serverPlayer) {
-                PlayerEntityDuck duck = (PlayerEntityDuck) serverPlayer;
-                duck.dungeonEnchants$changeEnchantmentPoints(-cost);
-                ServerPlayNetworking.send(serverPlayer, new EnchantmentPointsUpdateS2CPayload(duck.dungeonEnchants$getEnchantmentPoints()));
-            }
+            ModUtils.updateAttributions(stack, id / 3, cost, player);
+            ModUtils.applyPointsAndSend(player, PlayerEntityDuck.get(player)::dungeonEnchants$changeEnchantmentPoints, -cost);
         }
         this.inventory.markDirty();
         this.seed.set(

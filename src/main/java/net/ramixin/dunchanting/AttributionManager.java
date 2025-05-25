@@ -8,6 +8,9 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+//? >=1.21.5 {
+import net.minecraft.util.Uuids;
+//?}
 import net.ramixin.dunchanting.items.ModItemComponents;
 import net.ramixin.dunchanting.items.components.AttributionEntry;
 import net.ramixin.dunchanting.items.components.Attributions;
@@ -21,14 +24,18 @@ public class AttributionManager {
     private static final Map<UUID, Integer> pointsToDistribute = Collections.synchronizedMap(new HashMap<>());
 
     public static void redistribute(ItemStack stack, ServerWorld world) {
-        for(int i = 0; i < 3; i++)
+        for(int i = 0; i < 4; i++)
             redistribute(stack, world, i);
     }
 
     public static void redistribute(ItemStack stack, ServerWorld world, int slotId) {
         Attributions attributions = stack.get(ModItemComponents.ATTRIBUTIONS);
         if (attributions == null) return;
-        List<AttributionEntry> entries = attributions.get(slotId);
+        List<AttributionEntry> entries;
+        if(slotId == 3)
+            entries = attributions.persistent();
+        else
+            entries = attributions.get(slotId);
         for(AttributionEntry entry : entries) {
             UUID uuid = entry.playerUUID();
             PlayerEntity player = world.getPlayerByUuid(uuid);
@@ -54,7 +61,11 @@ public class AttributionManager {
         NbtList entries = new NbtList();
         for(Map.Entry<UUID, Integer> entry : pointsToDistribute.entrySet()) {
             NbtCompound tag = new NbtCompound();
-            tag.putUuid("uuid", entry.getKey());
+            //? >=1.21.5 {
+            tag.put("uuid", Uuids.INT_STREAM_CODEC, entry.getKey());
+            //?} else {
+            /*tag.putUuid("uuid", entry.getKey());
+            *///?}
             tag.putInt("points", entry.getValue());
             entries.add(tag);
         }
@@ -62,10 +73,16 @@ public class AttributionManager {
     }
 
     public static void load(NbtCompound root) {
-        NbtList entries = root.getList("attributions", 10);
+        NbtList entries = root.getList("attributions" /*? <1.21.5 >>*/ /*,10*/ ) /*? >=1.21.5 >>*/.orElseThrow() ;
         for(NbtElement entry : entries) {
             NbtCompound tag = (NbtCompound) entry;
-            pointsToDistribute.put(tag.getUuid("uuid"), tag.getInt("points"));
+            UUID uuid;
+            //? >=1.21.5 {
+            uuid = tag.get("uuid", Uuids.INT_STREAM_CODEC).orElseThrow();
+            //?} else {
+            /*uuid = tag.getUuid("uuid");
+            *///?}
+            pointsToDistribute.put(uuid, tag.getInt("points") /*? >=1.21.5 >>*/.orElseThrow() );
         }
     }
 }

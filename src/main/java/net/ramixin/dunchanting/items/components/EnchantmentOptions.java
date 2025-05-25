@@ -47,6 +47,15 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
         return getOptional(index).orElseThrow();
     }
 
+    public EnchantmentOptions with(int index, EnchantmentOption option) {
+        if(index < 0 || index > 2) throw new IndexOutOfBoundsException("unexpected index: " + index);
+        return switch (index) {
+            case 0 -> new EnchantmentOptions(Optional.of(option), second, third);
+            case 1 -> new EnchantmentOptions(first, Optional.of(option), third);
+            default -> new EnchantmentOptions(first, second, Optional.of(option));
+        };
+    }
+
     public boolean isInvalid(ItemStack stack, World world) {
         List<RegistryEntry<Enchantment>> enchantList = ModUtils.getPossibleEnchantments(world.getRegistryManager(), stack);
         if(enchantList.size() <= 1) return true;
@@ -124,7 +133,7 @@ public record EnchantmentOptions(Optional<EnchantmentOption> first, Optional<Enc
         EnchantmentOption[] options = new EnchantmentOption[3];
         for(int i = 0; i < 3; i++) {
             if(slotId != i) options[i] = getOptional(i).orElse(null);
-            else options[i] = getOptional(i).orElse(EnchantmentOption.DEFAULT).modify(enchant, optionId);
+            else options[i] = getOptional(i).orElse(EnchantmentOption.DEFAULT).with(enchant, optionId);
         }
         return new EnchantmentOptions(options[0], options[1], options[2]);
     }

@@ -1,9 +1,12 @@
 package net.ramixin.dunchanting.mixins;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.entity.Entity;
 import net.minecraft.server.PlayerManager;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
+import net.ramixin.dunchanting.util.PlayerEntityDuck;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -17,5 +20,9 @@ public class PlayerManagerMixin {
         serverPlayer.setExperienceLevel(player.experienceLevel);
         serverPlayer.setExperiencePoints(player.totalExperience);
         serverPlayer.experienceProgress = player.experienceProgress;
+        PlayerEntityDuck duck = PlayerEntityDuck.get(player);
+        PlayerEntityDuck serverDuck = PlayerEntityDuck.get(serverPlayer);
+        serverDuck.dungeonEnchants$setEnchantmentPoints(duck.dungeonEnchants$getEnchantmentPoints());
+        ServerPlayNetworking.send(serverPlayer, new EnchantmentPointsUpdateS2CPayload(duck.dungeonEnchants$getEnchantmentPoints()));
     }
 }
