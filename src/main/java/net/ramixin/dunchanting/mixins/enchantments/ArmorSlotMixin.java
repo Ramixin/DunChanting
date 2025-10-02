@@ -10,7 +10,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.screen.slot.ArmorSlot;
 import net.minecraft.util.Unit;
 import net.ramixin.dunchanting.enchantments.ModEnchantmentEffects;
-import net.ramixin.dunchanting.items.ModItemComponents;
+import net.ramixin.dunchanting.items.components.ModItemComponents;
 import net.ramixin.dunchanting.util.ModUtils;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +26,7 @@ public class ArmorSlotMixin {
 
     @Inject(method = "setStack", at = @At("HEAD"))
     private void addBoundComponentIfHasBinding(ItemStack stack, ItemStack previousStack, CallbackInfo ci) {
-        if(ModUtils.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_ARMOR_CHANGE, this.entity.getWorld(), stack))
+        if(ModUtils.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_ARMOR_CHANGE, this.entity.getEntityWorld(), stack))
             stack.set(ModItemComponents.BOUND, Unit.INSTANCE);
         else
             stack.remove(ModItemComponents.BOUND);

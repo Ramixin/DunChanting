@@ -4,13 +4,16 @@
   "compatibilityLevel": "JAVA_21",
   "client": [
     "AnvilScreenMixin",
-    "BakedModelManagerMixin",
+    "AtlasManagerMixin",
+    "BarMixin",
     "ElementMixin",
     "EnchantmentScreenMixin",
     "HandledScreenMixin",
-    "InGameHudMixin"
+    "gilded.BasicItemModelMixin",
+    "gilded.DualMixin",
+    "gilded.ItemRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-	}
+  }
 }

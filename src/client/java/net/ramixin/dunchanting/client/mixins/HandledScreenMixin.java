@@ -1,5 +1,6 @@
 package net.ramixin.dunchanting.client.mixins;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.EnchantmentScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -30,7 +31,7 @@ public class HandledScreenMixin {
     }
 
     @Inject(method = "mouseClicked", at = @At("TAIL"))
-    private void mouseClickedDuckedScreen(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        if(this instanceof ScreenDuck screenDuck) screenDuck.dungeonEnchants$mouseClicked(mouseX, mouseY, button);
+    private void mouseClickedDuckedScreen(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+        if(this instanceof ScreenDuck screenDuck) screenDuck.dungeonEnchants$mouseClicked(click, doubled);
     }
 }

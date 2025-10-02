@@ -17,6 +17,9 @@
 		],
 		"client": [
 			"net.ramixin.dunchanting.client.DunchantingClient"
+		],
+		"mm:early_risers": [
+			"net.ramixin.dunchanting.DunchantingEarlyLoader"
 		]
 	},
 	"mixins": [
@@ -28,7 +31,7 @@
 	],
 	"depends": {
 		"fabricloader": ">=0.15.11",
-		"minecraft": "1.21.5",
+		"minecraft": ">=1.21.9",
 		"java": ">=21",
 		"fabric-api": "*"
 	}

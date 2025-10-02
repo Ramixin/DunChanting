@@ -7,13 +7,12 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchanting.client.util.ModClientUtils;
 import net.ramixin.dunchanting.client.util.TooltipRenderer;
-import net.ramixin.dunchanting.items.components.EnchantmentOption;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
+import net.ramixin.dunchanting.items.components.EnchantmentSlot;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModTags;
 import net.ramixin.dunchanting.util.ModUtils;
@@ -35,21 +34,19 @@ public class TransferHoverManager extends AbstractUIHoverManager {
         int index = activeHoverOption / 3;
         EnchantmentOptions options = element.getEnchantmentOptions();
         if(options.isLocked(index)) return;
-        EnchantmentOption option = options.get(index);
+        EnchantmentSlot option = options.getOrThrow(index);
         if(option.isLocked(optionIndex)) return;
-        String enchant = option.get(optionIndex);
-        Identifier enchantId = Identifier.of(enchant);
-        RegistryEntry<Enchantment> entry = ModClientUtils.idToEntry(enchantId);
-        if(entry == null) return;
-        int enchantLevel = ModUtils.getEnchantmentLevel(entry, stack);
-        boolean powerful = entry.isIn(ModTags.POWERFUL_ENCHANTMENT);
+        RegistryEntry<Enchantment> enchant = option.getOrThrow(optionIndex);
+        if(enchant == null) return;
+        int enchantLevel = ModUtils.getEnchantmentLevel(enchant, stack);
+        boolean powerful = enchant.isIn(ModTags.POWERFUL_ENCHANTMENT);
         TooltipRenderer renderer = new TooltipRenderer(context, textRenderer, mouseX, mouseY);
         if(ModClientUtils.markAsUnavailable(element, activeHoverOption, enchant)) {
-            renderUnavailableTooltip(entry, powerful, renderer);
+            renderUnavailableTooltip(enchant, powerful, renderer);
             return;
         }
         renderer.render(List.of(Text.translatable("container.anvil.replacing").formatted(Formatting.RED)), 0, 0);
-        renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, false, false, false);
+        renderInfoTooltip(enchant, powerful, enchantLevel, renderer, true, false, false, false, false, false, false);
         renderer.resetHeight();
 
         RegistryEntry<Enchantment> transferSelection = transferElement.getTransferSelection();

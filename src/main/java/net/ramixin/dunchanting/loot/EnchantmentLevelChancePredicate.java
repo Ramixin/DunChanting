@@ -6,12 +6,7 @@ import net.minecraft.component.ComponentType;
 import net.minecraft.component.DataComponentTypes;
 import net.minecraft.component.type.ItemEnchantmentsComponent;
 import net.minecraft.enchantment.Enchantment;
-/*? >=1.21.5 {*/
 import net.minecraft.predicate.component.ComponentSubPredicate;
-/*?} else {*/
-/*import net.minecraft.predicate.item.ComponentSubPredicate;
-import net.minecraft.item.ItemStack;
-*//*?}*/
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.entry.RegistryFixedCodec;

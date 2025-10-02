@@ -10,18 +10,16 @@ import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.inventory.Inventory;
 import net.minecraft.inventory.SimpleInventory;
 import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.ScreenHandlerContext;
 import net.minecraft.screen.slot.Slot;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
-import net.minecraft.util.Identifier;
 import net.ramixin.dunchanting.AttributionManager;
-import net.ramixin.dunchanting.items.ModItemComponents;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
+import net.ramixin.dunchanting.items.components.ModItemComponents;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModUtils;
 
@@ -91,15 +89,14 @@ public class ModGrindstoneScreenHandler extends ScreenHandler {
         if(options == null) return false;
         if(!selected.hasSelection(id)) return false;
 
-        if(player.getWorld() instanceof ServerWorld serverWorld) {
+        if(player.getEntityWorld() instanceof ServerWorld serverWorld) {
             AttributionManager.redistribute(itemStack, serverWorld, id);
             this.context.run((world, pos) -> world.playSound(null, pos.getX(), pos.getY(), pos.getZ(), SoundEvents.BLOCK_GRINDSTONE_USE, SoundCategory.BLOCKS));
         }
         int optionId = selected.get(id);
-        String enchant = options.get(id).get(optionId);
-        RegistryKey<Enchantment> key = RegistryKey.of(RegistryKeys.ENCHANTMENT, Identifier.of(enchant));
+        RegistryEntry<Enchantment> enchant = options.getOrThrow(id).getOrThrow(optionId);
         ItemEnchantmentsComponent.Builder builder = new ItemEnchantmentsComponent.Builder(EnchantmentHelper.getEnchantments(itemStack));
-        builder.remove(entry -> entry.matchesKey(key));
+        builder.remove(entry -> entry.equals(enchant));
         itemStack.set(DataComponentTypes.ENCHANTMENTS, builder.build());
         SelectedEnchantments disenchanted = selected.disenchantOption(id);
         itemStack.set(ModItemComponents.SELECTED_ENCHANTMENTS, disenchanted);

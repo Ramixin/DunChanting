@@ -1,5 +1,5 @@
 plugins {
-	id 'fabric-loom' version '1.10-SNAPSHOT'
+	id 'fabric-loom' version "${loom_version}"
 	id 'maven-publish'
 }
 
@@ -17,7 +17,7 @@ repositories {
 loom {
 	splitEnvironmentSourceSets()
 
-	accessWidenerPath = getRootProject().file("src/main/resources/dunchanting.accesswidener")
+	accessWidenerPath = file("src/main/resources/dunchanting.accesswidener")
 
 	mods {
 		"dunchanting" {
@@ -25,32 +25,28 @@ loom {
 			sourceSet sourceSets.client
 		}
 	}
-
-	runConfigs.all {
-		ideConfigGenerated true // Run configurations are not created for subprojects by default
-		runDir "../../run" // Use a shared run folder and create separate worlds
-	}
-}
-
-processResources {
-	inputs.property "version", getRootProject().mod_version
-
-	filesMatching("fabric.mod.json") {
-		expand "version": getRootProject().mod_version
-	}
 }
 
 dependencies {
 	// To change the versions see the gradle.properties file
-	minecraft "com.mojang:minecraft:${stonecutter.current.project}"
-	mappings "net.fabricmc:yarn:${property("deps.yarn_mappings")}:v2"
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	// Fabric API. This is technically optional, but you probably want it anyway.
-	modImplementation "net.fabricmc.fabric-api:fabric-api:${property("deps.fabric_api")}"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
 	include (modImplementation "com.github.ramixin:mixson-fabric:${project.mixson_version}")
+	include modImplementation("com.github.Chocohead:Fabric-ASM:${project.asm_version}")
 	
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
 }
 
 tasks.withType(JavaCompile).configureEach {

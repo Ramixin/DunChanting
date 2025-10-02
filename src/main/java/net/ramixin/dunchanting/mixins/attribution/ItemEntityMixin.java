@@ -26,24 +26,15 @@ public abstract class ItemEntityMixin extends Entity {
 
     @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;discard()V", ordinal = 1))
     private void redistributePointsOnItemDiscard(CallbackInfo ci) {
-        if(!(getWorld() instanceof ServerWorld world)) return;
+        if(!(getEntityWorld() instanceof ServerWorld world)) return;
         ItemStack stack = getStack();
         AttributionManager.redistribute(stack, world);
     }
 
-    //? >=1.21.2 {
     @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;discard()V"))
     private void redistributePointsOnItemDestroyed(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
         ItemStack stack = getStack();
         AttributionManager.redistribute(stack, world);
     }
-    //?} else {
-    /*@Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;discard()V"))
-    private void redistributePointsOnItemDestroyed(DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        ItemStack stack = getStack();
-        if(!(getWorld() instanceof ServerWorld serverWorld)) return;
-        AttributionManager.redistribute(stack, serverWorld);
-    }
-    *///?}
 
 }

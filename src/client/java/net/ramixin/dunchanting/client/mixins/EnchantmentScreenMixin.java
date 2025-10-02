@@ -1,5 +1,6 @@
 package net.ramixin.dunchanting.client.mixins;
 
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.EnchantmentScreen;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
@@ -53,12 +54,7 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
         enchantingElement.tick(stack);
     }
 
-    @Inject(method = "drawBackground", at = @At(value = "INVOKE", target =
-            //? >=1.21.2 {
-            "Lnet/minecraft/client/gui/DrawContext;drawTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIFFIIII)V"
-            //?} else
-            /*"Lnet/minecraft/client/gui/DrawContext;drawTexture(Lnet/minecraft/util/Identifier;IIIIII)V"*/
-            , ordinal = 0, shift = At.Shift.AFTER), cancellable = true)
+    @Inject(method = "drawBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIFFIIII)V", ordinal = 0, shift = At.Shift.AFTER), cancellable = true)
     private void preventDefaultRenderingAndRenderEnchantingUIElement(DrawContext context, float delta, int mouseX, int mouseY, CallbackInfo ci) {
         ci.cancel();
         int relX = (this.width - this.backgroundWidth) / 2;
@@ -78,8 +74,8 @@ public abstract class EnchantmentScreenMixin extends HandledScreen<EnchantmentSc
     }
 
     @Inject(method = "mouseClicked", at = @At("HEAD"), cancellable = true)
-    private void applyEnchantmentOnClick(double mouseX, double mouseY, int button, CallbackInfoReturnable<Boolean> cir) {
-        cir.setReturnValue(super.mouseClicked(mouseX, mouseY, button));
+    private void applyEnchantmentOnClick(Click click, boolean doubled, CallbackInfoReturnable<Boolean> cir) {
+        cir.setReturnValue(super.mouseClicked(click, doubled));
         if(this.client == null || this.client.interactionManager == null) return;
         if(ModUtils.hasInvalidOptions(stack, this.client.world)) return;
         if(enchantingElement == null) return;

@@ -12,7 +12,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.Items;
 import net.minecraft.registry.DynamicRegistryManager;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.EnchantmentTags;
@@ -20,24 +19,18 @@ import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.random.Random;
 import net.minecraft.world.World;
 import net.ramixin.dunchanting.Dunchanting;
 import net.ramixin.dunchanting.enchantments.LeveledEnchantmentEffect;
-import net.ramixin.dunchanting.items.ModItemComponents;
 import net.ramixin.dunchanting.items.components.*;
 import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
 import org.apache.commons.lang3.function.TriFunction;
-import org.jetbrains.annotations.NotNull;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -52,7 +45,7 @@ public interface ModUtils {
         return false;
     }
 
-    static float oddsOfThirdEnchantmentOption(int level, int optionIndex) {
+    static float oddsOfThirdEnchantmentSlot(int level, int optionIndex) {
         int index = optionIndex * 5;
         if(level > 10 + index) return 1;
         return (float) Math.sin(((level - index) * Math.PI) / 20d);
@@ -77,11 +70,6 @@ public interface ModUtils {
         SelectedEnchantments selectedEnchantments = stack.get(ModItemComponents.SELECTED_ENCHANTMENTS);
         if(selectedEnchantments == null) return SelectedEnchantments.DEFAULT;
         else return selectedEnchantments;
-    }
-
-    static boolean enchantmentIsInvalid(String id, Registry<Enchantment> registry, List<RegistryEntry<Enchantment>> validList) {
-        Optional<RegistryEntry.Reference<Enchantment>> entry = registry.getEntry(Identifier.of(id));
-        return entry.filter(validList::contains).isEmpty();
     }
 
     static <T, R> T decodeGenericTripleOptionalList(Iterator<R> iter, TriFunction<Optional<R>, Optional<R>, Optional<R>, T> constructor, Function<R, Boolean> evalFunc) {
@@ -116,8 +104,8 @@ public interface ModUtils {
         else if(playerLevel <= 15) enchantmentSlotCount = roll <= odds ? 3 : 2;
         else enchantmentSlotCount = 3;
 
-        EnchantmentOption[] options = new EnchantmentOption[3];
-        Set<String> discourageList = new HashSet<>();
+        EnchantmentSlot[] options = new EnchantmentSlot[3];
+        Set<RegistryEntry<Enchantment>> discourageList = new HashSet<>();
 
         ItemEnchantmentsComponent enchantments = EnchantmentHelper.getEnchantments(stack);
         Iterator<RegistryEntry<Enchantment>> enchantmentsIterator = enchantments.getEnchantments().iterator();
@@ -126,22 +114,21 @@ public interface ModUtils {
         boolean hasEnchantments = false;
         for(int i = 0; i < 3; i++) {
             if(i >= enchantmentSlotCount) break;
-            EnchantmentOption option = generateEnchantmentOption(world.getRandom(), playerLevel, i, discourageList, totalWeight.get(), enchantList);
+            EnchantmentSlot option = generateEnchantmentOption(world.getRandom(), playerLevel, i, discourageList, totalWeight.get(), enchantList);
             if(option == null) continue;
             if(enchantmentsIterator.hasNext()) {
                 RegistryEntry<Enchantment> enchant = enchantmentsIterator.next();
-                String id = enchant.getIdAsString();
                 label: {
                     for(int n = 0; n < 3; n++)
-                        if(option.getOptional(n).map(id::equals).orElse(false)) {
+                        if(option.getOptional(n).map(enchant::equals).orElse(false)) {
                             usedEnchantments[i] = n;
                             hasEnchantments = true;
                             break label;
                         }
                     usedEnchantments[i] = 0;
-                    option = option.with(id, 0);
+                    option = option.withEnchantment(enchant, 0);
                     hasEnchantments = true;
-                    discourageList.add(id);
+                    discourageList.add(enchant);
                 }
             }
             options[i] = option;
@@ -175,23 +162,23 @@ public interface ModUtils {
         return enchantList;
     }
 
-    private static EnchantmentOption generateEnchantmentOption(Random random, int playerLevel, int optionIndex, Set<String> discourageList, int totalWeight, List<RegistryEntry<Enchantment>> enchantList) {
+    private static EnchantmentSlot generateEnchantmentOption(Random random, int playerLevel, int optionIndex, Set<RegistryEntry<Enchantment>> discourageList, int totalWeight, List<RegistryEntry<Enchantment>> enchantList) {
         float enchantRoll = random.nextFloat();
         int optionCount;
-        if(enchantRoll < oddsOfThirdEnchantmentOption(playerLevel, optionIndex)) optionCount = 3;
+        if(enchantRoll < oddsOfThirdEnchantmentSlot(playerLevel, optionIndex)) optionCount = 3;
         else optionCount = 2;
-        String[] enchants = new String[3];
+        @SuppressWarnings("unchecked") RegistryEntry<Enchantment>[] enchants = new RegistryEntry[3];
         for(int i = 0; i < optionCount; i++) {
             int rolledWeight = random.nextBetween(1, totalWeight);
-            String enchant = getRolledEnchantment(enchantList, rolledWeight, enchants, discourageList);
-            if(enchant == null) {
+            RegistryEntry<Enchantment> entry = getRolledEnchantment(enchantList, rolledWeight, enchants, discourageList);
+            if(entry == null) {
                 if(i != 2) return null;
             } else {
-                discourageList.add(enchant);
-                enchants[i] = enchant;
+                discourageList.add(entry);
+                enchants[i] = entry;
             }
         }
-        return new EnchantmentOption(enchants[0], enchants[1], enchants[2]);
+        return new EnchantmentSlot(enchants[0], enchants[1], enchants[2]);
     }
 
     static EnchantmentOptions rerollOption(World world, ItemStack stack, EnchantmentOptions options, int playerLevel, int optionIndex) {
@@ -200,14 +187,14 @@ public interface ModUtils {
         AtomicInteger totalWeight = new AtomicInteger();
         enchantList.forEach(entry -> totalWeight.addAndGet(entry.value().getWeight()));
         Collections.shuffle(enchantList);
-        Set<String> discourageList = new HashSet<>();
+        Set<RegistryEntry<Enchantment>> discourageList = new HashSet<>();
         for(int i = 0; i < 3; i++)
             for(int j = 0; j < 3; j++)
-                if(!options.isLocked(i) && !options.get(i).isLocked(j))
-                    discourageList.add(options.get(i).get(j));
-        EnchantmentOption option = generateEnchantmentOption(world.getRandom(), playerLevel, optionIndex, discourageList, totalWeight.get(), enchantList);
+                if(!options.isLocked(i) && !options.getOrThrow(i).isLocked(j))
+                    discourageList.add(options.getOrThrow(i).getOrThrow(j));
+        EnchantmentSlot option = generateEnchantmentOption(world.getRandom(), playerLevel, optionIndex, discourageList, totalWeight.get(), enchantList);
         if(option == null) return null;
-        return options.with(optionIndex, option);
+        return options.withSlot(optionIndex, option);
     }
 
     static void updateAttributions(ItemStack stack, int id, int cost, PlayerEntity player) {
@@ -223,8 +210,8 @@ public interface ModUtils {
         stack.set(ModItemComponents.ATTRIBUTIONS, attributions);
     }
 
-    private static String getRolledEnchantment(List<RegistryEntry<Enchantment>> enchantments, int rolledWeight, String[] enchants, Set<String> immutableDiscourage) {
-        HashSet<String> discourageSet = new HashSet<>(immutableDiscourage);
+    private static RegistryEntry<Enchantment> getRolledEnchantment(List<RegistryEntry<Enchantment>> enchantments, int rolledWeight, RegistryEntry<Enchantment>[] enchants, Set<RegistryEntry<Enchantment>> immutableDiscourage) {
+        HashSet<RegistryEntry<Enchantment>> discourageSet = new HashSet<>(immutableDiscourage);
         int index = 0;
         int roll = 0;
         while(true) {
@@ -233,16 +220,16 @@ public interface ModUtils {
                 return null;
             }
             Enchantment enchantment = enchantments.get(index).value();
-            String id = enchantments.get(index++).getIdAsString();
+            RegistryEntry<Enchantment> entry = enchantments.get(index++);
             rolledWeight -= enchantment.getWeight();
             if(index >= enchantments.size()) index = 0;
             if(rolledWeight > 0) continue;
-            if(!id.equals(enchants[0]) && !id.equals(enchants[1])) {
-                if(discourageSet.contains(id)) {
-                    discourageSet.remove(id);
+            if(!entry.equals(enchants[0]) && !entry.equals(enchants[1])) {
+                if(discourageSet.contains(entry)) {
+                    discourageSet.remove(entry);
                     continue;
                 }
-                return id;
+                return entry;
             }
         }
     }
@@ -254,12 +241,12 @@ public interface ModUtils {
             Dunchanting.LOGGER.error("Failed to enchant item: No enchantment options for {}", stack);
             return;
         }
-        Optional<EnchantmentOption> enchantment = options.getOptional(option);
+        Optional<EnchantmentSlot> enchantment = options.getOptional(option);
         if(enchantment.isEmpty()) {
             Dunchanting.LOGGER.error("Failed to enchant item: No enchantment option with index {} for {}", option, stack);
             return;
         }
-        Optional<String> enchant = enchantment.get().getOptional(choice);
+        Optional<RegistryEntry<Enchantment>> enchant = enchantment.get().getOptional(choice);
         if(enchant.isEmpty()) {
             Dunchanting.LOGGER.error("Failed to enchant item: No enchantment in option {} with index {} for {}", option, choice, stack);
             return;
@@ -280,16 +267,6 @@ public interface ModUtils {
 
     static int manhattanDistance(int x, int y, int x1, int y1) {
         return Math.abs(x - x1) + Math.abs(y - y1);
-    }
-
-    static ByteArrayOutputStream bufferedImageToStream(BufferedImage image) {
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        try {
-            ImageIO.write(image, "png", stream);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return stream;
     }
 
     static List<String> textWrapString(String text, int tolerance) {
@@ -331,18 +308,6 @@ public interface ModUtils {
         return Math.abs(fixed + length - tolerance);
     }
 
-    static RegistryEntry<Enchantment> idToEntry(Identifier id, @NotNull World world) {
-        Registry<Enchantment> enchantmentRegistry = world.getRegistryManager()
-                /*? >=1.21.2 {*/
-                .getOrThrow(RegistryKeys.ENCHANTMENT);
-                //?} else
-                /*.get(RegistryKeys.ENCHANTMENT);*/
-        Optional<RegistryEntry.Reference<Enchantment>> maybeEnchant = enchantmentRegistry.getEntry(id);
-        if(maybeEnchant.isEmpty()) return null;
-        RegistryEntry.Reference<Enchantment> enchantmentReference = maybeEnchant.get();
-        return enchantmentRegistry.getEntry(enchantmentReference.value());
-    }
-
     static int getEnchantingCost(RegistryEntry<Enchantment> entry, ItemStack stack) {
         int level = EnchantmentHelper.getLevel(entry, stack) + 1;
         boolean powerful = entry.isIn(ModTags.POWERFUL_ENCHANTMENT);
@@ -368,23 +333,21 @@ public interface ModUtils {
             ServerPlayNetworking.send(serverPlayer, new EnchantmentPointsUpdateS2CPayload(duck.dungeonEnchants$getEnchantmentPoints()));
     }
 
-    static boolean markAsUnavailable(ItemStack stack, int hoveringIndex, String enchant, Registry<Enchantment> registry) {
+    static boolean markAsUnavailable(ItemStack stack, int hoveringIndex, RegistryEntry<Enchantment> enchant) {
         SelectedEnchantments selectedEnchantments = stack.getOrDefault(ModItemComponents.SELECTED_ENCHANTMENTS, SelectedEnchantments.DEFAULT);
         EnchantmentOptions enchantmentOptions = stack.get(ModItemComponents.ENCHANTMENT_OPTIONS);
         if(enchantmentOptions == null) return false;
         int index = hoveringIndex / 3;
-        RegistryEntry<Enchantment> enchantValue = registry.getEntry(registry.get(Identifier.of(enchant)));
-        return doSelectionsForbid(enchant, selectedEnchantments, enchantmentOptions, index, registry, enchantValue);
+        return isEnchantmentConflicting(selectedEnchantments, enchantmentOptions, index, enchant);
     }
 
-    static boolean doSelectionsForbid(String enchant, SelectedEnchantments selectedEnchantments, EnchantmentOptions enchantmentOptions, int index, Registry<Enchantment> registry, RegistryEntry<Enchantment> enchantValue) {
+    static boolean isEnchantmentConflicting(SelectedEnchantments selectedEnchantments, EnchantmentOptions enchantmentOptions, int index, RegistryEntry<Enchantment> enchant) {
         for(int i = 0; i < 3; i++)
             if(selectedEnchantments.hasSelection(i)) {
-                String otherEnchant = enchantmentOptions.get(i).get(selectedEnchantments.get(i));
+                RegistryEntry<Enchantment> otherEnchant = enchantmentOptions.getOrThrow(i).getOrThrow(selectedEnchantments.get(i));
                 if (i == index) return false;
                 if(otherEnchant.equals(enchant)) return true;
-                RegistryEntry<Enchantment> otherValue = registry.getEntry(registry.get(Identifier.of(otherEnchant)));
-                if(!Enchantment.canBeCombined(enchantValue, otherValue)) return true;
+                if(!Enchantment.canBeCombined(enchant, otherEnchant)) return true;
             }
         return false;
     }

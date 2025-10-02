@@ -1,9 +1,9 @@
 package net.ramixin.dunchanting.client.screens;
 
+import net.minecraft.client.gl.RenderPipelines;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
-//? >=1.21.2
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.text.Text;
@@ -74,9 +74,7 @@ public class ModGrindstoneScreen extends HandledScreen<ModGrindstoneScreenHandle
     protected void drawBackground(DrawContext context, float delta, int mouseX, int mouseY) {
         int i = (this.width - this.backgroundWidth) / 2;
         int j = (this.height - this.backgroundHeight) / 2;
-        context.drawTexture(
-                /*? if >=1.21.2 >>*/ RenderLayer::getGuiTextured,
-                BACKGROUND, i, j, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
+        context.drawTexture(RenderPipelines.GUI, BACKGROUND, i, j, 0.0F, 0.0F, this.backgroundWidth, this.backgroundHeight, 256, 256);
     }
 
     @Override
@@ -97,11 +95,11 @@ public class ModGrindstoneScreen extends HandledScreen<ModGrindstoneScreenHandle
     }
 
     @Override
-    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+    public boolean mouseClicked(Click click, boolean doubled) {
         int activeHoverOption = element.getActiveHoverOption();
         if(this.client == null || this.client.interactionManager == null) return false;
         if(activeHoverOption != -1)  this.client.interactionManager.clickButton(this.handler.syncId, activeHoverOption / 3);
         if(element != null) element.getHoverManager().cancelActiveHover();
-        return super.mouseClicked(mouseX, mouseY, button);
+        return super.mouseClicked(click, doubled);
     }
 }

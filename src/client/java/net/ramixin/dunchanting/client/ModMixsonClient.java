@@ -1,18 +1,15 @@
 package net.ramixin.dunchanting.client;
 
-import net.minecraft.resource.Resource;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchanting.Dunchanting;
-import net.ramixin.dunchanting.util.ModUtils;
+import net.ramixin.mixson.debug.DebugMode;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
-import net.ramixin.mixson.inline.MixsonCodec;
+import net.ramixin.mixson.inline.MixsonCodecs;
 import net.ramixin.mixson.util.MixsonUtil;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 
 import static net.ramixin.dunchanting.util.ModUtils.manhattanDistance;
 import static net.ramixin.dunchanting.util.ModUtils.toBufferedImage;
@@ -20,15 +17,15 @@ import static net.ramixin.dunchanting.util.ModUtils.toBufferedImage;
 @SuppressWarnings("unused")
 public class ModMixsonClient {
 
-    public static final MixsonCodec<BufferedImage> BUFFERED_IMAGE_PNG_MIXSON_CODEC = MixsonCodec.create("png",
-            resource -> ImageIO.read(resource.getInputStream()),
-            (r, elem) -> new Resource(r.getPack(), () -> new ByteArrayInputStream(ModUtils.bufferedImageToStream(elem).toByteArray()), r::getMetadata),
-            ModUtils::bufferedImageToStream
-    );
-
     public static void onInitialize() {
+
+        Mixson.setDebugMode(DebugMode.EXPORT);
+
+        //registerGlintTransformer("textures/misc/enchanted_glint_item", "textures/misc/generated/gilded_enchanted_glint_item");
+        registerGlintTransformer("textures/misc/enchanted_glint_armor", "textures/misc/generated/gilded_enchanted_glint_armor");
+
         Mixson.registerEvent(
-                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
+                MixsonCodecs.PNG,
                 Mixson.DEFAULT_PRIORITY,
                 id -> id.getPath().startsWith("textures/enchantment/large/"),
                 "FindAllLargeEnchantmentIcons",
@@ -49,7 +46,7 @@ public class ModMixsonClient {
         );
 
         Mixson.registerEvent(
-                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
+                MixsonCodecs.PNG,
                 Mixson.DEFAULT_PRIORITY + 100,
                 id -> id.getPath().startsWith("textures/enchantment/generated/"),
                 "GrayscaleAllGeneratedEnchantmentIcons",
@@ -63,7 +60,7 @@ public class ModMixsonClient {
         );
 
         Mixson.registerEvent(
-                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
+                MixsonCodecs.PNG,
                 Mixson.DEFAULT_PRIORITY + 100,
                 id -> id.getPath().startsWith("textures/enchantment/small/"),
                 "GrayscaleAllSmallEnchantmentIcons",
@@ -77,7 +74,7 @@ public class ModMixsonClient {
         );
 
         Mixson.registerEvent(
-                BUFFERED_IMAGE_PNG_MIXSON_CODEC,
+                MixsonCodecs.PNG,
                 Mixson.DEFAULT_PRIORITY + 100,
                 id -> id.getPath().startsWith("textures/enchantment/large/"),
                 "GrayscaleLargeSmallEnchantmentIcons",
@@ -86,6 +83,34 @@ public class ModMixsonClient {
                     Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/large/", "/generated/grayscale/large/"));
                     BufferedImage grayscaleImage = grayscaleImage(context.getFile());
                     context.createResource(newId, grayscaleImage);
+                },
+                false
+        );
+    }
+
+    private static void registerGlintTransformer(String path, String transformedPath) {
+        Color shiftColor = new Color(0xFFA601);
+        Mixson.registerEvent(
+                MixsonCodecs.PNG,
+                Mixson.DEFAULT_PRIORITY,
+                id -> id.getPath().contains(path),
+                "GenerateGlint_"+path,
+                context -> {
+                    Dunchanting.LOGGER.info("generating glint texture for {}", context.getResourceId());
+                    BufferedImage image = context.getFile();
+                    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+                    for(int i = 0; i < image.getWidth(); i++)
+                        for(int j = 0; j < image.getHeight(); j++) {
+                            double gray = (grayscalePixel(image.getRGB(i, j)) & 0xFF) / 255d;
+                            Color newColor = new Color(
+                                    (int) (shiftColor.getRed() * gray),
+                                    (int) (shiftColor.getGreen() * gray),
+                                    (int) (shiftColor.getBlue() * gray)
+                            );
+                            newImage.setRGB(i, j, newColor.getRGB());
+                        }
+                    context.createResource(Dunchanting.id(transformedPath).withSuffixedPath(".png"), newImage);
+                    context.setDebugExport(newImage);
                 },
                 false
         );
@@ -122,8 +147,7 @@ public class ModMixsonClient {
             double newAlpha = ((i - 16) / 24.0);
             for (int x = 0; x < i; x++)
                 for (int y = 0; y < i; y++) {
-                    int cornerCount = getCornerCount(x, y, i);
-                    if (cornerCount != 0) {
+                    if (isCorner(x, y, i)) {
                         finalImage.setRGB(offset + x, offset + y, 0x00000000);
                         continue;
                     }
@@ -152,8 +176,7 @@ public class ModMixsonClient {
             int offset = (64 - i) / 2;
             for(int x = 0; x < i; x++)
                 for(int y = 0; y < i; y++) {
-                    int cornerCount = getCornerCount(x, y, i);
-                    if (cornerCount != 0) finalImg.setRGB(offset + x, offset + y, 0x00000000);
+                    if (isCorner(x, y, i)) finalImg.setRGB(offset + x, offset + y, 0x00000000);
                     else finalImg.setRGB(offset + x, offset + y, scaled.getRGB(x, y));
                 }
             Identifier identifier = Identifier.of(context.getResourceId().toString().replace("/large/", "/generated/").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
@@ -172,8 +195,7 @@ public class ModMixsonClient {
             int offset = (64 - i) / 2;
             for(int x = 0; x < i; x++)
                 for(int y = 0; y < i; y++) {
-                    int cornerCount = getCornerCount(x, y, i);
-                    if (cornerCount != 0) finalImg.setRGB(offset + x, offset + y, 0x00000000);
+                    if (isCorner(x, y, i)) finalImg.setRGB(offset + x, offset + y, 0x00000000);
                     else finalImg.setRGB(offset + x, offset + y, scaled.getRGB(x, y));
                 }
             Identifier identifier = Identifier.of(context.getResourceId().toString().replace("large", "generated").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
@@ -182,12 +204,10 @@ public class ModMixsonClient {
         }
     }
 
-    private static int getCornerCount(int x, int y, int i) {
-        int cornerCount = 0;
-        if (manhattanDistance(x, y, 0, 0) <= i / 2d - 1) cornerCount++;
-        if (manhattanDistance(x, y, i - 1, 0) <= i / 2d - 1) cornerCount++;
-        if (manhattanDistance(x, y, i - 1, i - 1) <= i / 2d - 1) cornerCount++;
-        if (manhattanDistance(x, y, 0, i - 1) <= i / 2d - 1) cornerCount++;
-        return cornerCount;
+    private static boolean isCorner(int x, int y, int i) {
+        return (manhattanDistance(x, y, i - 1, i - 1) <= i / 2d - 1) ||
+                (manhattanDistance(x, y, 0, i - 1) <= i / 2d - 1) ||
+                (manhattanDistance(x, y, i - 1, 0) <= i / 2d - 1) ||
+                (manhattanDistance(x, y, 0, 0) <= i / 2d - 1);
     }
 }

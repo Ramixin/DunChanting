@@ -15,8 +15,8 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.screen.*;
 import net.minecraft.screen.slot.ForgingSlotsManager;
-import net.ramixin.dunchanting.items.ModItemComponents;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
+import net.ramixin.dunchanting.items.components.ModItemComponents;
 import net.ramixin.dunchanting.util.ClickableHandler;
 import net.ramixin.dunchanting.util.ModUtils;
 import org.jetbrains.annotations.Nullable;
@@ -102,7 +102,7 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler imple
             }
             List<RegistryEntry<Enchantment>> orderedEnchantments = ModUtils.getOrderedEnchantments(secondary);
             RegistryEntry<Enchantment> replacement = orderedEnchantments.get(replacementEnchantment / 3);
-            EnchantmentOptions newOptions = options.modify(replacement.getIdAsString(), replacingEnchantment / 3, replacingEnchantment % 3);
+            EnchantmentOptions newOptions = options.withEnchantment(replacement, replacingEnchantment / 3, replacingEnchantment % 3);
             copy.set(ModItemComponents.ENCHANTMENT_OPTIONS, newOptions);
             this.output.setStack(0, copy);
             levelCost.set(0);

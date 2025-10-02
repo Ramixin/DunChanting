@@ -4,9 +4,6 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.network.ClientPlayerEntity;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.registry.Registry;
-import net.minecraft.registry.RegistryKeys;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchanting.Dunchanting;
 import net.ramixin.dunchanting.client.screens.ModScreens;
@@ -20,6 +17,7 @@ public class DunchantingClient implements ClientModInitializer {
 
 	@Override
 	public void onInitializeClient() {
+		Dunchanting.LOGGER.info("initializing client (1/1)");
 		ModMixsonClient.onInitialize();
 		ClientPlayNetworking.registerGlobalReceiver(EnchantmentPointsUpdateS2CPayload.PACKET_ID, DunchantingClient::updateClientPlayerEnchantmentPoints);
 		ModScreens.onInitialize();
@@ -29,15 +27,6 @@ public class DunchantingClient implements ClientModInitializer {
 		ClientPlayerEntity player = MinecraftClient.getInstance().player;
 		if(player == null) throw new IllegalStateException("client player is null, but received '"+payload+"' payload");
 		PlayerEntityDuck.get(player).dungeonEnchants$setEnchantmentPoints(payload.value());
-	}
-
-	public static Registry<Enchantment> getEnchantmentRegistry() {
-		if(MinecraftClient.getInstance().world == null) throw new IllegalStateException();
-		return MinecraftClient.getInstance().world.getRegistryManager()
-				/*? >=1.21.2 {*/
-				.getOrThrow(RegistryKeys.ENCHANTMENT);
-				//?} else
-				/*.get(RegistryKeys.ENCHANTMENT);*/
 	}
 
 	public static PlayerEntityDuck getPlayerEntityDuck() {

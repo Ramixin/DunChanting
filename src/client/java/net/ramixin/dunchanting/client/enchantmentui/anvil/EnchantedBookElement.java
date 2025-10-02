@@ -6,8 +6,8 @@ import net.minecraft.item.Items;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
-import net.ramixin.dunchanting.items.components.EnchantmentOption;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
+import net.ramixin.dunchanting.items.components.EnchantmentSlot;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModUtils;
 
@@ -23,7 +23,7 @@ public class EnchantedBookElement extends AbstractEnchantmentUIElement {
     }
 
     @Override
-    public boolean renderGrayscale(int hoverIndex, String enchant) {
+    public boolean renderGrayscale(int hoverIndex, RegistryEntry<Enchantment> enchant) {
         return isEnchantmentDisallowed(hoverIndex);
     }
 
@@ -40,10 +40,10 @@ public class EnchantedBookElement extends AbstractEnchantmentUIElement {
     @Override
     protected EnchantmentOptions generateOptions(ItemStack stack) {
         List<RegistryEntry<Enchantment>> orderedEnchants = ModUtils.getOrderedEnchantments(stack);
-        EnchantmentOption[] options = new EnchantmentOption[3];
+        EnchantmentSlot[] options = new EnchantmentSlot[3];
         for(int i = 0; i < Math.min(orderedEnchants.size(), 3); i++) {
-            String enchant = orderedEnchants.get(i).getIdAsString();
-            options[i] = new EnchantmentOption(enchant, enchant, null);
+            RegistryEntry<Enchantment> enchant = orderedEnchants.get(i);
+            options[i] = new EnchantmentSlot(enchant, enchant, null);
         }
         return new EnchantmentOptions(options[0], options[1], options[2]);
     }

@@ -9,8 +9,9 @@ import net.minecraft.entity.EntityType;
 import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.storage.ReadView;
+import net.minecraft.storage.WriteView;
 import net.minecraft.world.World;
 import net.ramixin.dunchanting.enchantments.ModEnchantmentEffects;
 import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
@@ -71,17 +72,17 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     }
 
 
-    @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
-    private void writeEnchantmentPointsToData(NbtCompound nbt, CallbackInfo ci) {
-        nbt.putInt("EnchantmentPoints", enchantmentPoints);
-        nbt.putInt("HighestEnchantmentPoints", highestEnchantmentPoints);
+    @Inject(method = "writeCustomData", at = @At("TAIL"))
+    private void writeEnchantmentPointsToData(WriteView view, CallbackInfo ci) {
+        view.putInt("EnchantmentPoints", enchantmentPoints);
+        view.putInt("HighestEnchantmentPoints", highestEnchantmentPoints);
     }
 
-    @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
-    private void readEnchantmentPointsFromData(NbtCompound nbt, CallbackInfo ci) {
+    @Inject(method = "readCustomData", at = @At("TAIL"))
+    private void readEnchantmentPointsFromData(ReadView view, CallbackInfo ci) {
 
-        enchantmentPoints = nbt.getInt("EnchantmentPoints") /*? >=1.21.5 >>*/.orElseThrow() ;
-        highestEnchantmentPoints = nbt.getInt("HighestEnchantmentPoints") /*? >=1.21.5 >>*/.orElseThrow() ;
+        enchantmentPoints = view.getInt("EnchantmentPoints", 0);
+        highestEnchantmentPoints = view.getInt("HighestEnchantmentPoints", 0);
     }
 
     @Inject(method = "addExperienceLevels", at = @At("TAIL"))
@@ -119,17 +120,17 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
     @WrapOperation(method = "vanishCursedItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/enchantment/EnchantmentHelper;hasAnyEnchantmentsWith(Lnet/minecraft/item/ItemStack;Lnet/minecraft/component/ComponentType;)Z"))
     private boolean applyLeveledVanishingCurse(ItemStack stack, ComponentType<?> componentType, Operation<Boolean> original) {
         boolean val = original.call(stack, componentType);
-        return val || ModUtils.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_EQUIPMENT_DROP, getWorld(), stack);
+        return val || ModUtils.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_EQUIPMENT_DROP, getEntityWorld(), stack);
     }
 
-    @Inject(method = "writeCustomDataToNbt", at = @At("TAIL"))
-    private void writeLevelingMetadata(NbtCompound nbt, CallbackInfo ci) {
-        nbt.putInt("levelingMetaID", levelingMetaID);
+    @Inject(method = "writeCustomData", at = @At("TAIL"))
+    private void writeLevelingMetadata(WriteView view, CallbackInfo ci) {
+        view.putInt("levelingMetaID", levelingMetaID);
     }
 
-    @Inject(method = "readCustomDataFromNbt", at = @At("TAIL"))
-    private void readLevelingMetadata(NbtCompound nbt, CallbackInfo ci) {
-        levelingMetaID = nbt.getInt("levelingMetaID") /*? >=1.21.5 >>*/.orElseThrow() ;
+    @Inject(method = "readCustomData", at = @At("TAIL"))
+    private void readLevelingMetadata(ReadView view, CallbackInfo ci) {
+        levelingMetaID = view.getInt("levelingMetaID", 0);
 
         if(levelingMetaID == 0) {
             int points = (int) (12.5 * Math.pow(this.experienceLevel + this.experienceProgress, 2));

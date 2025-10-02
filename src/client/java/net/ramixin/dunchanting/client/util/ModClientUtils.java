@@ -1,8 +1,8 @@
 package net.ramixin.dunchanting.client.util;
 
+import net.minecraft.client.texture.Sprite;
 import net.minecraft.client.util.SpriteIdentifier;
 import net.minecraft.enchantment.Enchantment;
-import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.util.Identifier;
@@ -13,6 +13,7 @@ import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModUtils;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 public interface ModClientUtils {
 
@@ -27,25 +28,20 @@ public interface ModClientUtils {
         return String.format("container.enchant.%s.%s", powerAddition, levelVariant);
     }
 
-    static RegistryEntry<Enchantment> idToEntry(Identifier id) {
-        Registry<Enchantment> enchantmentRegistry = DunchantingClient.getEnchantmentRegistry();
-        Optional<RegistryEntry.Reference<Enchantment>> maybeEnchant = enchantmentRegistry.getEntry(id);
-        if(maybeEnchant.isEmpty()) return null;
-        RegistryEntry.Reference<Enchantment> enchantmentReference = maybeEnchant.get();
-        return enchantmentRegistry.getEntry(enchantmentReference.value());
-    }
-
-    static SpriteIdentifier getEnchantmentIcon(String id, int index, SpriteIdentifier defaultIcon, boolean grayscale, boolean large) {
-        Identifier enchantId = Identifier.of(id);
-        Optional<RegistryEntry.Reference<Enchantment>> enchantment = DunchantingClient.getEnchantmentRegistry().getEntry(enchantId);
-        if(enchantment.isEmpty()) return new SpriteIdentifier(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index, grayscale, large));
-        SpriteIdentifier spriteId = new SpriteIdentifier(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId(enchantId.getPath(), index, grayscale, large));
-        if(spriteId.getSprite() == defaultIcon.getSprite()) return new SpriteIdentifier(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("unknown", index, grayscale, large));
+    static SpriteIdentifier getEnchantmentIcon(RegistryEntry<Enchantment> entry, int index, SpriteIdentifier defaultIcon, boolean grayscale, boolean large, Function<SpriteIdentifier, Sprite> spriteResolver) {
+        Optional<RegistryKey<Enchantment>> maybeKey = entry.getKey();
+        if(maybeKey.isEmpty()) return new SpriteIdentifier(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("minecraft:unknown", index, grayscale, large));
+        RegistryKey<Enchantment> key = maybeKey.get();
+        SpriteIdentifier spriteId = new SpriteIdentifier(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId(key.getValue().toString(), index, grayscale, large));
+        Sprite sprite = spriteResolver.apply(spriteId);
+        if(sprite == spriteResolver.apply(defaultIcon)) return new SpriteIdentifier(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, getEnchantmentIconId("minecraft:unknown", index, grayscale, large));
         return spriteId;
     }
 
     static Identifier getEnchantmentIconId(String id, int index, boolean grayscale, boolean large) {
-        StringBuilder builder = new StringBuilder();
+        String[] splits = id.split(":");
+        StringBuilder builder = new StringBuilder(splits[0]);
+        builder.append(':');
         if(grayscale) {
             if(large) builder.append("generated/grayscale/large/");
             else if(index == 0) builder.append("generated/grayscale/small/");
@@ -55,30 +51,27 @@ public interface ModClientUtils {
             else if(index == 0) builder.append("small/");
             else builder.append("generated/");
         }
-        builder.append(id);
+        builder.append(splits[1]);
         if(index != 0) builder.append("/").append(index);
         return Identifier.of(builder.toString());
     }
 
-    static boolean markAsUnavailable(AbstractEnchantmentUIElement element, int hoveringIndex, String enchant) {
-        Registry<Enchantment> registry = DunchantingClient.getEnchantmentRegistry();
+    static boolean markAsUnavailable(AbstractEnchantmentUIElement element, int hoveringIndex, RegistryEntry<Enchantment> enchant) {
         SelectedEnchantments selectedEnchantments = element.getSelectedEnchantments();
         EnchantmentOptions enchantmentOptions = element.getEnchantmentOptions();
         int index = hoveringIndex / 3;
         if(selectedEnchantments.hasSelection(index)) return false;
-        RegistryEntry<Enchantment> enchantValue = registry.getEntry(registry.get(Identifier.of(enchant)));
-        if(ModUtils.doSelectionsForbid(enchant, selectedEnchantments, enchantmentOptions, index, registry, enchantValue))
+        if(ModUtils.isEnchantmentConflicting(selectedEnchantments, enchantmentOptions, index, enchant))
             return true;
         int hovering = element.getHoverManager().getActiveHoverOption();
         if(hovering == hoveringIndex) return false;
-        Optional<String> hoveringEnchantment = getHoveredEnchantment(element);
+        Optional<RegistryEntry<Enchantment>> hoveringEnchantment = getHoveredEnchantment(element);
         if(hoveringEnchantment.isEmpty()) return false;
-        String hoveringEnchant = hoveringEnchantment.get();
-        RegistryEntry<Enchantment> hoveringValue = registry.getEntry(registry.get(Identifier.of(hoveringEnchant)));
-        return !Enchantment.canBeCombined(enchantValue, hoveringValue);
+        RegistryEntry<Enchantment> hoveringEnchant = hoveringEnchantment.get();
+        return !Enchantment.canBeCombined(enchant, hoveringEnchant);
     }
 
-    static Optional<String> getHoveredEnchantment(AbstractEnchantmentUIElement element) {
+    static Optional<RegistryEntry<Enchantment>> getHoveredEnchantment(AbstractEnchantmentUIElement element) {
         EnchantmentOptions enchantmentOptions = element.getEnchantmentOptions();
         int hovering = element.getHoverManager().getActiveHoverOption();
         if(hovering == -1) return Optional.empty();
@@ -86,6 +79,6 @@ public interface ModClientUtils {
         int index = absHovering / 3;
         if(enchantmentOptions.isLocked(index)) return Optional.empty();
         int optionIndex = absHovering % 3;
-        return enchantmentOptions.get(index).getOptional(optionIndex);
+        return enchantmentOptions.getOrThrow(index).getOptional(optionIndex);
     }
 }

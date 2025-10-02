@@ -1,6 +1,8 @@
 package net.ramixin.dunchanting.client.enchantmentui.grindstone;
 
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 
@@ -11,7 +13,7 @@ public class GrindstoneElement extends AbstractEnchantmentUIElement {
     }
 
     @Override
-    public boolean renderGrayscale(int hoverIndex, String enchant) {
+    public boolean renderGrayscale(int hoverIndex, RegistryEntry<Enchantment> enchant) {
         return !getSelectedEnchantments().hasSelection(hoverIndex / 3);
     }
 

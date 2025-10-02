@@ -7,7 +7,6 @@ import net.minecraft.inventory.Inventory;
 import net.minecraft.item.ItemStack;
 import net.minecraft.screen.*;
 import net.minecraft.screen.slot.ForgingSlotsManager;
-import net.minecraft.screen.slot.Slot;
 import net.ramixin.dunchanting.util.ModUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Final;

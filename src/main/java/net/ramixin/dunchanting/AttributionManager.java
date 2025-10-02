@@ -8,12 +8,10 @@ import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-//? >=1.21.5 {
 import net.minecraft.util.Uuids;
-//?}
-import net.ramixin.dunchanting.items.ModItemComponents;
 import net.ramixin.dunchanting.items.components.AttributionEntry;
 import net.ramixin.dunchanting.items.components.Attributions;
+import net.ramixin.dunchanting.items.components.ModItemComponents;
 import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.dunchanting.util.PlayerEntityDuck;
 

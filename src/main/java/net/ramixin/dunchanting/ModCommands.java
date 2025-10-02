@@ -19,8 +19,8 @@ import net.minecraft.server.command.CommandManager;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.ramixin.dunchanting.items.ModItemComponents;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
+import net.ramixin.dunchanting.items.components.ModItemComponents;
 import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.dunchanting.util.ModUtils;
 import net.ramixin.dunchanting.util.PlayerEntityDuck;
@@ -66,7 +66,7 @@ public class ModCommands {
                                             if(player == null) throw PLAYER_NOT_FOUND.create();
                                             ItemStack stack = player.getMainHandStack();
                                             EnchantmentOptions options = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, EnchantmentOptions.DEFAULT);
-                                            EnchantmentOptions newOptions = options.modify(entry.getIdAsString(), slotId, optionId);
+                                            EnchantmentOptions newOptions = options.withEnchantment(entry, slotId, optionId);
                                             stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, newOptions);
                                             ctx.getSource().sendFeedback(() -> Text.translatable("commands.player.enchanting.modify.success", slotId, optionId), false);
                                             return 1;

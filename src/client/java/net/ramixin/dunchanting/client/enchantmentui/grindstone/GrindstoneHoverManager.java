@@ -8,14 +8,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchanting.client.util.ModClientUtils;
 import net.ramixin.dunchanting.client.util.TooltipRenderer;
-import net.ramixin.dunchanting.items.components.EnchantmentOption;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
+import net.ramixin.dunchanting.items.components.EnchantmentSlot;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModTags;
 import net.ramixin.dunchanting.util.ModUtils;
@@ -50,20 +49,18 @@ public class GrindstoneHoverManager extends AbstractUIHoverManager {
         int index = activeHoverOption / 3;
         EnchantmentOptions options = element.getEnchantmentOptions();
         if(options.isLocked(index)) return;
-        EnchantmentOption option = options.get(index);
+        EnchantmentSlot option = options.getOrThrow(index);
         if(option.isLocked(optionIndex)) return;
-        String enchant = option.get(optionIndex);
-        Identifier enchantId = Identifier.of(enchant);
-        RegistryEntry<Enchantment> entry = ModClientUtils.idToEntry(enchantId);
-        int enchantLevel = EnchantmentHelper.getLevel(entry, stack);
-        if(entry == null) return;
-        boolean powerful = entry.isIn(ModTags.POWERFUL_ENCHANTMENT);
+        RegistryEntry<Enchantment> enchant = option.getOrThrow(optionIndex);
+        int enchantLevel = EnchantmentHelper.getLevel(enchant, stack);
+        if(enchant == null) return;
+        boolean powerful = enchant.isIn(ModTags.POWERFUL_ENCHANTMENT);
         TooltipRenderer renderer = new TooltipRenderer(context, textRenderer, mouseX, mouseY);
         if(ModClientUtils.markAsUnavailable(element, activeHoverOption, enchant)) {
-            renderUnavailableTooltip(entry, powerful, renderer);
+            renderUnavailableTooltip(enchant, powerful, renderer);
             return;
         }
-        renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, false, true, true);
+        renderInfoTooltip(enchant, powerful, enchantLevel, renderer, true, false, false, false, false, true, true);
         renderer.resetHeight();
 
         String clickText = Language.getInstance().get("container.grindstone.disenchant");

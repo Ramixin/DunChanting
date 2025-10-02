@@ -2,13 +2,14 @@ package net.ramixin.dunchanting.client.mixins;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
+import com.mojang.blaze3d.pipeline.RenderPipeline;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.font.TextRenderer;
+import net.minecraft.client.gui.Click;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.AnvilScreen;
 import net.minecraft.client.gui.screen.ingame.ForgingScreen;
 import net.minecraft.client.gui.widget.TextFieldWidget;
-import net.minecraft.client.render.RenderLayer;
 import net.minecraft.enchantment.EnchantmentHelper;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.PlayerInventory;
@@ -35,8 +36,6 @@ import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
-
-import java.util.function.Function;
 
 @Mixin(AnvilScreen.class)
 public abstract class AnvilScreenMixin extends ForgingScreen<AnvilScreenHandler> implements ScreenDuck, EnchantmentUIHolder {
@@ -91,33 +90,17 @@ public abstract class AnvilScreenMixin extends ForgingScreen<AnvilScreenHandler>
         return original.call(textRenderer, x - 26, y + 30, width, height, text);
     }
 
-    @WrapOperation(method = "drawBackground", at = @At(value = "INVOKE", target =
-            //? >=1.21.2 {
-            "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V"
-            //?} else
-            /*"Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V"*/
-    ))
-    private void moveTextFieldTextures(DrawContext instance
-            //? >=1.21.2
-            , Function<Identifier, RenderLayer> renderLayers 
-            , Identifier sprite, int x, int y, int width, int height, Operation<Void> original) {
+    @WrapOperation(method = "drawBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V"))
+    private void moveTextFieldTextures(DrawContext instance, RenderPipeline renderPipeline, Identifier identifier, int x, int y, int w, int h, Operation<Void> original) {
         if(this.nameField.visible) {
-            instance.drawGuiTexture(/*? >=1.21.2 >>*/renderLayers, ModTextures.anvilTextFieldBackdrop, x - 32, y + 24, 122, 28);
-            original.call(instance, /*? >=1.21.2 >>*/renderLayers, sprite, x - 26, y + 30, width, height);
+            instance.drawGuiTexture(renderPipeline, ModTextures.anvilTextFieldBackdrop, x - 32, y + 24, 122, 28);
+            original.call(instance, renderPipeline, identifier, x - 26, y + 30, width, height);
         }
     }
 
-    @WrapOperation(method = "drawInvalidRecipeArrow", at = @At(value = "INVOKE", target =
-            //? >=1.21.2 {
-            "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Ljava/util/function/Function;Lnet/minecraft/util/Identifier;IIII)V"
-            //?} else
-            /*"Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lnet/minecraft/util/Identifier;IIII)V"*/
-    ))
-    private void moveInvalidRecipeArrow(DrawContext instance
-            //? >=1.21.2
-            , Function<Identifier, RenderLayer> renderLayers 
-            , Identifier sprite, int x, int y, int width, int height, Operation<Void> original) {
-        original.call(instance, /*? >=1.21.2 >>*/renderLayers, sprite, x - 9, y - 41, width - 3, height - 1);
+    @WrapOperation(method = "drawInvalidRecipeArrow", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V"))
+    private void moveInvalidRecipeArrow(DrawContext instance, RenderPipeline renderPipeline, Identifier identifier, int x, int y, int w, int h, Operation<Void> original) {
+        original.call(instance, renderPipeline, identifier, x - 9, y - 41, width - 3, height - 1);
     }
 
     @Override
@@ -174,7 +157,7 @@ public abstract class AnvilScreenMixin extends ForgingScreen<AnvilScreenHandler>
     }
 
     @Override
-    public void dungeonEnchants$mouseClicked(double mouseX, double mouseY, int button) {
+    public void dungeonEnchants$mouseClicked(Click click, boolean doubled) {
         if(showBookEnchants && bookElement instanceof EnchantedBookElement enchantedBookElement) {
             int hover = bookElement.getActiveHoverOption();
             if(hover == -1 || enchantedBookElement.isEnchantmentDisallowed(hover)) return;

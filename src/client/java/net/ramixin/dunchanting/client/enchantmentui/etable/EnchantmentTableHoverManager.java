@@ -9,14 +9,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.Language;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchanting.client.util.ModClientUtils;
 import net.ramixin.dunchanting.client.util.TooltipRenderer;
-import net.ramixin.dunchanting.items.components.EnchantmentOption;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
+import net.ramixin.dunchanting.items.components.EnchantmentSlot;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModTags;
 import net.ramixin.dunchanting.util.ModUtils;
@@ -101,25 +100,23 @@ public class EnchantmentTableHoverManager extends AbstractUIHoverManager {
         int index = activeHoverOption / 3;
         EnchantmentOptions options = element.getEnchantmentOptions();
         if(options.isLocked(index)) return;
-        EnchantmentOption option = options.get(index);
+        EnchantmentSlot option = options.getOrThrow(index);
         if(option.isLocked(optionIndex)) return;
-        String enchant = option.get(optionIndex);
-        Identifier enchantId = Identifier.of(enchant);
-        RegistryEntry<Enchantment> entry = ModClientUtils.idToEntry(enchantId);
-        int enchantLevel = EnchantmentHelper.getLevel(entry, stack);
-        if(entry == null) return;
-        canAffordHoverOption = ModUtils.canAfford(entry, stack, MinecraftClient.getInstance().player) || enchantLevel >= 3;
-        boolean powerful = entry.isIn(ModTags.POWERFUL_ENCHANTMENT);
+        RegistryEntry<Enchantment> enchant = option.getOrThrow(optionIndex);
+        int enchantLevel = EnchantmentHelper.getLevel(enchant, stack);
+        if(enchant == null) return;
+        canAffordHoverOption = ModUtils.canAfford(enchant, stack, MinecraftClient.getInstance().player) || enchantLevel >= 3;
+        boolean powerful = enchant.isIn(ModTags.POWERFUL_ENCHANTMENT);
         TooltipRenderer renderer = new TooltipRenderer(context, textRenderer, mouseX, mouseY);
         if(ModClientUtils.markAsUnavailable(element, activeHoverOption, enchant)) {
-            renderUnavailableTooltip(entry, powerful, renderer);
+            renderUnavailableTooltip(enchant, powerful, renderer);
             return;
         }
-        if(element.getSelectedEnchantments().hasSelection(index)) renderInfoTooltip(entry, powerful, enchantLevel, renderer, true, false, false, false, canAffordHoverOption, true, true);
-        if(enchantLevel >= entry.value().getMaxLevel()) return;
+        if(element.getSelectedEnchantments().hasSelection(index)) renderInfoTooltip(enchant, powerful, enchantLevel, renderer, true, false, false, false, canAffordHoverOption, true, true);
+        if(enchantLevel >= enchant.value().getMaxLevel()) return;
         renderer.resetHeight();
         boolean isFirstLevel = enchantLevel == 0;
-        renderInfoTooltip(entry, powerful, enchantLevel + 1, renderer, isFirstLevel, true, true, true, canAffordHoverOption, true, true);
+        renderInfoTooltip(enchant, powerful, enchantLevel + 1, renderer, isFirstLevel, true, true, true, canAffordHoverOption, true, true);
     }
 
 }

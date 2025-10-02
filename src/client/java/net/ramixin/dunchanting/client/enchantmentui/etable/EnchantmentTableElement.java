@@ -1,6 +1,8 @@
 package net.ramixin.dunchanting.client.enchantmentui.etable;
 
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.ItemStack;
+import net.minecraft.registry.entry.RegistryEntry;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchanting.client.util.ModClientUtils;
@@ -13,7 +15,7 @@ public class EnchantmentTableElement extends AbstractEnchantmentUIElement {
     }
 
     @Override
-    public boolean renderGrayscale(int hoverIndex, String enchant) {
+    public boolean renderGrayscale(int hoverIndex, RegistryEntry<Enchantment> enchant) {
         return ModClientUtils.markAsUnavailable(this, hoverIndex, enchant);
     }
 

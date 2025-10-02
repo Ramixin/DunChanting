@@ -5,17 +5,14 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.networking.v1.PayloadTypeRegistry;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.fabricmc.loader.api.FabricLoader;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.ramixin.dunchanting.enchantments.ModEnchantmentEffects;
 import net.ramixin.dunchanting.handlers.ModHandlers;
-import net.ramixin.dunchanting.items.ModItemComponents;
+import net.ramixin.dunchanting.items.components.ModItemComponents;
 import net.ramixin.dunchanting.loot.ModSubPredicateTypes;
 import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
 import net.ramixin.dunchanting.util.PlayerEntityDuck;
-import net.ramixin.mixson.debug.DebugMode;
-import net.ramixin.mixson.inline.Mixson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +31,8 @@ public class Dunchanting implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("initializing (1/1)");
-		if(FabricLoader.getInstance().isDevelopmentEnvironment()) Mixson.setDebugMode(DebugMode.EXPORT);
+		LOGGER.info("initializing (1/2)");
+		//if(FabricLoader.getInstance().isDevelopmentEnvironment()) Mixson.setDebugMode(DebugMode.EXPORT);
 		ModItemComponents.onInitialize();
 		ModEnchantmentEffects.onInitialize();
 		ModSubPredicateTypes.onInitialize();

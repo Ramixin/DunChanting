@@ -24,7 +24,7 @@ public class TransferElement extends AbstractEnchantmentUIElement {
     }
 
     @Override
-    public boolean renderGrayscale(int hoverIndex, String enchant) {
+    public boolean renderGrayscale(int hoverIndex, RegistryEntry<Enchantment> enchant) {
         return getSelectedEnchantments().hasSelection(hoverIndex / 3);
     }
 
