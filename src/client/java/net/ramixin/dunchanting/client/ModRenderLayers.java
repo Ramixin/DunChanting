@@ -13,7 +13,6 @@ public class ModRenderLayers {
     public static final Identifier GILDED_ITEM_GLINT_TEXTURE = Dunchanting.id("textures/misc/generated/gilded_enchanted_glint_item.png");
     public static final Identifier GILDED_ARMOR_ENTITY_GLINT_TEXTURE = Dunchanting.id("textures/misc/generated/gilded_enchanted_glint_armor.png");
 
-
     public static final RenderLayer GILDED_ARMOR_ENTITY_GLINT = RenderLayer.of(
             "gilded_armor_entity_glint",
             1536,

@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
+import net.ramixin.mixson.inline.MixsonCodecs;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -94,8 +95,9 @@ public class ModMixson {
         );
 
         Mixson.registerEvent(
+                MixsonCodecs.JSON_ELEMENT,
                 Mixson.DEFAULT_PRIORITY,
-                "enchantment/frost_walker",
+                id -> id.getPath().startsWith("enchantment/frost_walker"),
                 "RebalanceFrostWalker",
                 context -> {
                     JsonArray effectArray = getEffect("minecraft:location_changed", context);
@@ -113,37 +115,16 @@ public class ModMixson {
         modifyValueEffect("sharpness", "minecraft:damage", 1, 1);
         modifyValueEffect("protection", "minecraft:damage_protection", 2, 1);
         modifyValueEffect("fire_protection", "minecraft:damage_protection", 3, 2.5);
-        modifyAttributeEffect("fire_protection",
-                //? >=1.21.2 {
-                "minecraft:burning_time"
-                //?} else
-                /*"minecraft:generic.burning_time"*/
-                , -0.2, -0.2);
+        modifyAttributeEffect("fire_protection", "minecraft:burning_time", -0.2, -0.2);
         modifyValueEffect("feather_falling", "minecraft:damage_protection", 4, 4);
         modifyValueEffect("blast_protection", "minecraft:damage_protection", 3, 2.5);
-        modifyAttributeEffect("blast_protection",
-                //? >=1.21.2 {
-                "minecraft:explosion_knockback_resistance"
-                //?} else
-                /*"minecraft:generic.explosion_knockback_resistance"*/
-                , 0.2, 0.2);
+        modifyAttributeEffect("blast_protection", "minecraft:explosion_knockback_resistance", 0.2, 0.2);
         modifyValueEffect("projectile_protection", "minecraft:damage_protection", 3, 2.5);
-        modifyAttributeEffect("aqua_affinity",
-                //? >=1.21.2 {
-                "minecraft:submerged_mining_speed"
-                //?} else
-                /*"minecraft:player.submerged_mining_speed"*/
-
-                , 2, 1);
+        modifyAttributeEffect("aqua_affinity", "minecraft:submerged_mining_speed", 2, 1);
         modifyValueEffect("smite", "minecraft:damage", 4.5, 4);
         modifyValueEffect("bane_of_arthropods", "minecraft:damage", 4.5, 4);
         modifyValueEffect("knockback", "minecraft:knockback", 1, 0.5);
-        modifyAttributeEffect("efficiency",
-                //? >=1.21.2 {
-                "minecraft:mining_efficiency"
-                //?} else
-                /*"minecraft:player.mining_efficiency"*/
-                , 10, 8);
+        modifyAttributeEffect("efficiency", "minecraft:mining_efficiency", 10, 8);
         modifyValueEffect("power", "minecraft:damage", 1.5, 0.5);
         modifyValueEffect("punch", "minecraft:knockback", 1, 0.5);
         modifyValueEffect("luck_of_the_sea", "minecraft:fishing_luck_bonus", 0.5, 0.25);
@@ -201,8 +182,9 @@ public class ModMixson {
     @SuppressWarnings("SameParameterValue")
     private static void modifyRequirements(String enchantment, String effectName, JsonObject requirement) {
         Mixson.registerEvent(
+                MixsonCodecs.JSON_ELEMENT,
                 Mixson.DEFAULT_PRIORITY,
-                "enchantment/"+enchantment,
+                id -> id.getPath().endsWith("enchantment/"+enchantment),
                 "addChance_"+enchantment,
                 context -> {
                     JsonArray effect = getEffect(effectName, context);
@@ -240,8 +222,9 @@ public class ModMixson {
 
     private static void modifyValueEffect(String enchantment, String effectName, double base, double perLevel, String componentName) {
         Mixson.registerEvent(
+                MixsonCodecs.JSON_ELEMENT,
                 Mixson.DEFAULT_PRIORITY,
-                "enchantment/"+enchantment,
+                id -> id.getPath().startsWith("enchantment/"+enchantment),
                 "modifyValue_"+enchantment,
                 context -> {
                     JsonArray effect = getEffect(effectName, context);
@@ -249,14 +232,16 @@ public class ModMixson {
                     if(!(removedEntry instanceof JsonObject objectEntry)) return;
                     objectEntry.add(componentName, buildAddEffect(base, perLevel));
                     effect.add(objectEntry);
-                }
+                },
+                false
         );
     }
 
     private static void modifyAttributeEffect(String enchantment, String attribute, double base, double perLevel) {
         Mixson.registerEvent(
+                MixsonCodecs.JSON_ELEMENT,
                 Mixson.DEFAULT_PRIORITY,
-                "enchantment/"+enchantment,
+                id -> id.getPath().startsWith("enchantment/"+enchantment),
                 "modifyAttribute_"+enchantment,
                 context -> {
                     JsonArray effect = getEffect("minecraft:attributes", context);
@@ -265,7 +250,8 @@ public class ModMixson {
                     objectEntry.addProperty("attribute", attribute);
                     objectEntry.add("amount", buildLinearValue(base, perLevel));
                     effect.add(objectEntry);
-                }
+                },
+                false
         );
     }
 

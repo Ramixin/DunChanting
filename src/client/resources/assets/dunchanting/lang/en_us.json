@@ -1,5 +1,7 @@
 {
 
+  "item.minecraft.gilded_book": "Gilded Book",
+
   "commands.player.enchantment_points.negative": "Player can not have negative enchantment points",
   "commands.player.enchantment_points.reroll.success": "Successfully rerolled item enchantments",
   "commands.player.enchantment_points.player_not_found": "Command must be run by player",

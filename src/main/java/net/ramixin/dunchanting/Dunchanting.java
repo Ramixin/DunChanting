@@ -31,7 +31,7 @@ public class Dunchanting implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		LOGGER.info("initializing (1/2)");
+		LOGGER.info("initializing (2/2)");
 		//if(FabricLoader.getInstance().isDevelopmentEnvironment()) Mixson.setDebugMode(DebugMode.EXPORT);
 		ModItemComponents.onInitialize();
 		ModEnchantmentEffects.onInitialize();

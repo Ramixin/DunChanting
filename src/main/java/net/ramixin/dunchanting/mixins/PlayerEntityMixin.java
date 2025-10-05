@@ -51,22 +51,12 @@ public abstract class PlayerEntityMixin extends LivingEntity implements PlayerEn
         cir.setReturnValue(25 * (experienceLevel) + 50);
     }
 
-    @ModifyReturnValue(method =
-            //? if >=1.21.4 {
-            "shouldAlwaysDropExperience"
-            //?} else
-            /*"shouldAlwaysDropXp"*/
-            , at = @At("RETURN"))
+    @ModifyReturnValue(method = "shouldAlwaysDropExperience", at = @At("RETURN"))
     private boolean changeShouldAlwaysDropXp(boolean original) {
         return true;
     }
 
-    @ModifyReturnValue(method =
-            //? if >=1.21.4 {
-            "getExperienceToDrop"
-            //?} else
-            /*"getXpToDrop"*/
-            , at = @At("RETURN"))
+    @ModifyReturnValue(method = "getExperienceToDrop", at = @At("RETURN"))
     private int preventXpOrbsFromDropping(int original) {
         return 0;
     }

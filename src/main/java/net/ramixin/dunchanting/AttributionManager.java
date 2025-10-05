@@ -59,11 +59,7 @@ public class AttributionManager {
         NbtList entries = new NbtList();
         for(Map.Entry<UUID, Integer> entry : pointsToDistribute.entrySet()) {
             NbtCompound tag = new NbtCompound();
-            //? >=1.21.5 {
             tag.put("uuid", Uuids.INT_STREAM_CODEC, entry.getKey());
-            //?} else {
-            /*tag.putUuid("uuid", entry.getKey());
-            *///?}
             tag.putInt("points", entry.getValue());
             entries.add(tag);
         }
@@ -71,16 +67,11 @@ public class AttributionManager {
     }
 
     public static void load(NbtCompound root) {
-        NbtList entries = root.getList("attributions" /*? <1.21.5 >>*/ /*,10*/ ) /*? >=1.21.5 >>*/.orElseThrow() ;
+        NbtList entries = root.getList("attributions").orElseThrow() ;
         for(NbtElement entry : entries) {
             NbtCompound tag = (NbtCompound) entry;
-            UUID uuid;
-            //? >=1.21.5 {
-            uuid = tag.get("uuid", Uuids.INT_STREAM_CODEC).orElseThrow();
-            //?} else {
-            /*uuid = tag.getUuid("uuid");
-            *///?}
-            pointsToDistribute.put(uuid, tag.getInt("points") /*? >=1.21.5 >>*/.orElseThrow() );
+            UUID uuid = tag.get("uuid", Uuids.INT_STREAM_CODEC).orElseThrow();
+            pointsToDistribute.put(uuid, tag.getInt("points").orElseThrow() );
         }
     }
 }

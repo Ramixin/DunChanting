@@ -38,19 +38,7 @@ public class ModGrindstoneScreenHandler extends ScreenHandler {
         this.context = context;
         this.inventory = new SimpleInventory(1);
         this.addSlot(new Slot(inventory, 0, 80, 6));
-        //? >=1.21.2 {
         this.addPlayerSlots(playerInventory, 8, 100);
-        //?} else {
-        /*for(int i = 0; i < 3; ++i) {
-            for(int j = 0; j < 9; ++j) {
-                this.addSlot(new Slot(playerInventory, j + i * 9 + 9, 8 + j * 18, 100 + i * 18));
-            }
-        }
-
-        for(int i = 0; i < 9; ++i) {
-            this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 158));
-        }
-        *///?}
         this.playerLevel = playerInventory.player.experienceLevel;
     }
 

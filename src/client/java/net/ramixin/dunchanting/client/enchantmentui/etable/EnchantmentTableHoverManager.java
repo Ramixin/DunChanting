@@ -112,7 +112,8 @@ public class EnchantmentTableHoverManager extends AbstractUIHoverManager {
             renderUnavailableTooltip(enchant, powerful, renderer);
             return;
         }
-        if(element.getSelectedEnchantments().hasSelection(index)) renderInfoTooltip(enchant, powerful, enchantLevel, renderer, true, false, false, false, canAffordHoverOption, true, true);
+        if(element.getSelectedEnchantments().hasSelection(index))
+            renderInfoTooltip(enchant, powerful, enchantLevel, renderer, true, false, false, false, canAffordHoverOption, true, true);
         if(enchantLevel >= enchant.value().getMaxLevel()) return;
         renderer.resetHeight();
         boolean isFirstLevel = enchantLevel == 0;

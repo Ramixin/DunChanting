@@ -29,7 +29,6 @@ public abstract class ForgingScreenHandlerMixin extends ScreenHandler {
         super(type, syncId);
     }
 
-    //? >=1.21.2 {
     @WrapOperation(method = "<init>", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/ForgingScreenHandler;addPlayerSlots(Lnet/minecraft/inventory/Inventory;II)V"))
     private void movePlayerSlots(ForgingScreenHandler instance, Inventory inventory, int i, int j, Operation<Void> original) {
         int y;
@@ -37,22 +36,10 @@ public abstract class ForgingScreenHandlerMixin extends ScreenHandler {
         else y = j;
         original.call(instance, inventory, i, y);
     }
-    //?} else {
-    /*@WrapOperation(method = "addPlayerInventorySlots", at = @At(value = "NEW", target = "(Lnet/minecraft/inventory/Inventory;III)Lnet/minecraft/screen/slot/Slot;"))
-    private Slot movePlayerSlots(Inventory inventory, int index, int i, int j, Operation<Slot> original) {
-        int y;
-        if(((ScreenHandler)this) instanceof AnvilScreenHandler) y = j + 16;
-        else y = j;
-        return original.call(inventory, index, i, y);
-    }
-    *///?}
 
 
     @Inject(method = "<init>", at = @At("TAIL"))
-    private void updatePlayerLevel(ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context
-            //? >=1.21.2
-            , ForgingSlotsManager forgingSlotsManager
-            , CallbackInfo ci) {
+    private void updatePlayerLevel(ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, ForgingSlotsManager forgingSlotsManager, CallbackInfo ci) {
         playerLevel = playerInventory.player.experienceLevel;
     }
 

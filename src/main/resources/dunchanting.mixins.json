@@ -17,6 +17,7 @@
     "enchantments.EnchantmentHelperMixin",
     "enchantments.EnchantmentMixin",
     "etable.EnchantmentScreenHandlerMixin",
+    "gilded.ItemMixin",
     "grindstone.GrindStoneBlockMixin"
   ],
   "injectors": {

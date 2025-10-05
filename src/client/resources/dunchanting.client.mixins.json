@@ -6,14 +6,20 @@
     "AnvilScreenMixin",
     "AtlasManagerMixin",
     "BarMixin",
+    "DrawContentMixin",
     "ElementMixin",
     "EnchantmentScreenMixin",
     "HandledScreenMixin",
     "gilded.BasicItemModelMixin",
+    "gilded.BufferBuilderStorageMixin",
     "gilded.DualMixin",
-    "gilded.ItemRendererMixin"
+    "gilded.EquipmentRendererMixin",
+    "gilded.ItemRendererMixin",
+    "gilded.WorldRendererMixin"
   ],
   "injectors": {
     "defaultRequire": 1
-  }
+  },
+  "mixinextras": {
+    "minVersion": "0.5.0"}
 }

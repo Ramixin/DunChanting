@@ -91,16 +91,16 @@ public abstract class AnvilScreenMixin extends ForgingScreen<AnvilScreenHandler>
     }
 
     @WrapOperation(method = "drawBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V"))
-    private void moveTextFieldTextures(DrawContext instance, RenderPipeline renderPipeline, Identifier identifier, int x, int y, int w, int h, Operation<Void> original) {
+    private void moveTextFieldTextures(DrawContext context, RenderPipeline renderPipeline, Identifier identifier, int x, int y, int w, int h, Operation<Void> original) {
         if(this.nameField.visible) {
-            instance.drawGuiTexture(renderPipeline, ModTextures.anvilTextFieldBackdrop, x - 32, y + 24, 122, 28);
-            original.call(instance, renderPipeline, identifier, x - 26, y + 30, width, height);
+            context.drawGuiTexture(renderPipeline, ModTextures.anvilTextFieldBackdrop, x - 32, y + 24, 122, 28);
+            original.call(context, renderPipeline, identifier, x - 26, y + 30, w, h);
         }
     }
 
     @WrapOperation(method = "drawInvalidRecipeArrow", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/DrawContext;drawGuiTexture(Lcom/mojang/blaze3d/pipeline/RenderPipeline;Lnet/minecraft/util/Identifier;IIII)V"))
-    private void moveInvalidRecipeArrow(DrawContext instance, RenderPipeline renderPipeline, Identifier identifier, int x, int y, int w, int h, Operation<Void> original) {
-        original.call(instance, renderPipeline, identifier, x - 9, y - 41, width - 3, height - 1);
+    private void moveInvalidRecipeArrow(DrawContext context, RenderPipeline renderPipeline, Identifier identifier, int x, int y, int w, int h, Operation<Void> original) {
+        original.call(context, renderPipeline, identifier, x - 9, y - 41, w - 3, h - 1);
     }
 
     @Override

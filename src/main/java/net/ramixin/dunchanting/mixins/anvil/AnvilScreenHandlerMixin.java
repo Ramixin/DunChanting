@@ -33,16 +33,8 @@ import java.util.function.Predicate;
 public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler implements ClickableHandler {
 
 
-    public AnvilScreenHandlerMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context
-                                   //? >=1.21.2 {
-                                   , ForgingSlotsManager forgingSlotsManager
-                                   //?}
-    ) {
-        super(type, syncId, playerInventory, context
-                //? >=1.21.2 {
-                , forgingSlotsManager
-                //?}
-        );
+    public AnvilScreenHandlerMixin(@Nullable ScreenHandlerType<?> type, int syncId, PlayerInventory playerInventory, ScreenHandlerContext context, ForgingSlotsManager forgingSlotsManager) {
+        super(type, syncId, playerInventory, context, forgingSlotsManager);
     }
 
     @Shadow public abstract void updateResult();
@@ -55,17 +47,17 @@ public abstract class AnvilScreenHandlerMixin extends ForgingScreenHandler imple
     private int replacementEnchantment = -1;
 
     @WrapOperation(method = "getForgingSlotsManager", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/ForgingSlotsManager$Builder;input(IIILjava/util/function/Predicate;)Lnet/minecraft/screen/slot/ForgingSlotsManager$Builder;", ordinal = 0))
-    private /*? >=1.21.2 >>*/static ForgingSlotsManager.Builder moveFirstInputSlot(ForgingSlotsManager.Builder instance, int slotId, int x, int y, Predicate<ItemStack> mayPlace, Operation<ForgingSlotsManager.Builder> original) {
+    private static ForgingSlotsManager.Builder moveFirstInputSlot(ForgingSlotsManager.Builder instance, int slotId, int x, int y, Predicate<ItemStack> mayPlace, Operation<ForgingSlotsManager.Builder> original) {
         return original.call(instance, slotId, x + 9, 6, mayPlace);
     }
 
     @WrapOperation(method = "getForgingSlotsManager", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/ForgingSlotsManager$Builder;input(IIILjava/util/function/Predicate;)Lnet/minecraft/screen/slot/ForgingSlotsManager$Builder;", ordinal = 1))
-    private /*? >=1.21.2 >>*/static ForgingSlotsManager.Builder moveSecondInputSlot(ForgingSlotsManager.Builder instance, int slotId, int x, int y, Predicate<ItemStack> mayPlace, Operation<ForgingSlotsManager.Builder> original) {
+    private static ForgingSlotsManager.Builder moveSecondInputSlot(ForgingSlotsManager.Builder instance, int slotId, int x, int y, Predicate<ItemStack> mayPlace, Operation<ForgingSlotsManager.Builder> original) {
         return original.call(instance, slotId, x - 10, 6, mayPlace);
     }
 
     @WrapOperation(method = "getForgingSlotsManager", at = @At(value = "INVOKE", target = "Lnet/minecraft/screen/slot/ForgingSlotsManager$Builder;output(III)Lnet/minecraft/screen/slot/ForgingSlotsManager$Builder;"))
-    private /*? >=1.21.2 >>*/static ForgingSlotsManager.Builder moveOutputSlot(ForgingSlotsManager.Builder instance, int slotId, int x, int y, Operation<ForgingSlotsManager.Builder> original) {
+    private static ForgingSlotsManager.Builder moveOutputSlot(ForgingSlotsManager.Builder instance, int slotId, int x, int y, Operation<ForgingSlotsManager.Builder> original) {
         return original.call(instance, slotId, x - 11, 6);
     }
 

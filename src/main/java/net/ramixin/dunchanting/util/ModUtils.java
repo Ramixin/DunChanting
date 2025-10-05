@@ -152,12 +152,7 @@ public interface ModUtils {
 
     static List<RegistryEntry<Enchantment>> getPossibleEnchantments(DynamicRegistryManager manager, ItemStack stack) {
         List<RegistryEntry<Enchantment>> enchantList = new ArrayList<>();
-        for(RegistryEntry<Enchantment> entry : manager
-                /*? >=1.21.2 {*/
-                .getOrThrow(RegistryKeys.ENCHANTMENT)
-                //?} else
-                /*.get(RegistryKeys.ENCHANTMENT)*/
-                .iterateEntries(EnchantmentTags.IN_ENCHANTING_TABLE))
+        for(RegistryEntry<Enchantment> entry : manager.getOrThrow(RegistryKeys.ENCHANTMENT).iterateEntries(EnchantmentTags.IN_ENCHANTING_TABLE))
             if(entry.value().isSupportedItem(stack)) enchantList.add(entry);
         return enchantList;
     }

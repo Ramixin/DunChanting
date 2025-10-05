@@ -21,9 +21,6 @@ public class ModMixsonClient {
 
         Mixson.setDebugMode(DebugMode.EXPORT);
 
-        //registerGlintTransformer("textures/misc/enchanted_glint_item", "textures/misc/generated/gilded_enchanted_glint_item");
-        registerGlintTransformer("textures/misc/enchanted_glint_armor", "textures/misc/generated/gilded_enchanted_glint_armor");
-
         Mixson.registerEvent(
                 MixsonCodecs.PNG,
                 Mixson.DEFAULT_PRIORITY,
@@ -83,34 +80,6 @@ public class ModMixsonClient {
                     Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/large/", "/generated/grayscale/large/"));
                     BufferedImage grayscaleImage = grayscaleImage(context.getFile());
                     context.createResource(newId, grayscaleImage);
-                },
-                false
-        );
-    }
-
-    private static void registerGlintTransformer(String path, String transformedPath) {
-        Color shiftColor = new Color(0xFFA601);
-        Mixson.registerEvent(
-                MixsonCodecs.PNG,
-                Mixson.DEFAULT_PRIORITY,
-                id -> id.getPath().contains(path),
-                "GenerateGlint_"+path,
-                context -> {
-                    Dunchanting.LOGGER.info("generating glint texture for {}", context.getResourceId());
-                    BufferedImage image = context.getFile();
-                    BufferedImage newImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
-                    for(int i = 0; i < image.getWidth(); i++)
-                        for(int j = 0; j < image.getHeight(); j++) {
-                            double gray = (grayscalePixel(image.getRGB(i, j)) & 0xFF) / 255d;
-                            Color newColor = new Color(
-                                    (int) (shiftColor.getRed() * gray),
-                                    (int) (shiftColor.getGreen() * gray),
-                                    (int) (shiftColor.getBlue() * gray)
-                            );
-                            newImage.setRGB(i, j, newColor.getRGB());
-                        }
-                    context.createResource(Dunchanting.id(transformedPath).withSuffixedPath(".png"), newImage);
-                    context.setDebugExport(newImage);
                 },
                 false
         );

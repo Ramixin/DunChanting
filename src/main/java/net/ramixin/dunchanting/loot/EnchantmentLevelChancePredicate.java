@@ -25,7 +25,7 @@ public record EnchantmentLevelChancePredicate(RegistryEntry<Enchantment> enchant
     }
 
     @Override
-    public boolean test(/*? <1.21.5 {*//*ItemStack stack,*//*?}*/ ItemEnchantmentsComponent component) {
+    public boolean test(ItemEnchantmentsComponent component) {
         int level = component.getLevel(enchantment);
         return level >= RANDOM.nextBetween(1, 3);
     }

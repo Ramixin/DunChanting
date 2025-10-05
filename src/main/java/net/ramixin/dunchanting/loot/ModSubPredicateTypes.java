@@ -1,10 +1,5 @@
 package net.ramixin.dunchanting.loot;
 
-//? <1.21.5 {
-/*import net.minecraft.predicate.item.ComponentSubPredicate;
-import net.minecraft.predicate.item.ItemSubPredicate;
-*///?} else {
-
 import net.minecraft.predicate.component.ComponentPredicate;
 import net.minecraft.predicate.component.ComponentSubPredicate;
 import net.minecraft.registry.Registries;
