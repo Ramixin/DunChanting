@@ -1,30 +1,30 @@
 package net.ramixin.dunchanting.client.enchantmentui.anvil;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.core.Holder;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
-import net.ramixin.dunchanting.util.ModUtils;
+import net.ramixin.dunchanting.util.ModUtil;
 
 import java.util.List;
 
 public class TransferElement extends AbstractEnchantmentUIElement {
 
-    private final RegistryEntry<Enchantment> transferSelection;
+    private final Holder<Enchantment> transferSelection;
     private final int transferIndex;
     private final ItemStack bookStack;
 
     public TransferElement(ItemStack stack, ItemStack book, int transferSelection, AbstractUIHoverManager hoverManager, int relX, int relY) {
         super(stack, hoverManager, relX, relY);
         this.transferIndex = transferSelection;
-        List<RegistryEntry<Enchantment>> orderedEnchantments = ModUtils.getOrderedEnchantments(book);
+        List<Holder<Enchantment>> orderedEnchantments = ModUtil.getOrderedEnchantments(book);
         this.transferSelection = orderedEnchantments.get(transferSelection / 3);
         this.bookStack = book;
     }
 
     @Override
-    public boolean renderGrayscale(int hoverIndex, RegistryEntry<Enchantment> enchant) {
+    public boolean renderGrayscale(int hoverIndex, Holder<Enchantment> enchant) {
         return getSelectedEnchantments().hasSelection(hoverIndex / 3);
     }
 
@@ -43,7 +43,7 @@ public class TransferElement extends AbstractEnchantmentUIElement {
         return true;
     }
 
-    public RegistryEntry<Enchantment> getTransferSelection() {
+    public Holder<Enchantment> getTransferSelection() {
         return transferSelection;
     }
 }

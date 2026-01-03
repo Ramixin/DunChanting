@@ -1,8 +1,6 @@
 package net.ramixin.dunchanting.client;
 
-import net.minecraft.util.Identifier;
-import net.ramixin.dunchanting.Dunchanting;
-import net.ramixin.mixson.debug.DebugMode;
+import net.minecraft.resources.Identifier;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import net.ramixin.mixson.inline.MixsonCodecs;
@@ -11,15 +9,13 @@ import net.ramixin.mixson.util.MixsonUtil;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-import static net.ramixin.dunchanting.util.ModUtils.manhattanDistance;
-import static net.ramixin.dunchanting.util.ModUtils.toBufferedImage;
+import static net.ramixin.dunchanting.util.ModUtil.manhattanDistance;
+import static net.ramixin.dunchanting.util.ModUtil.toBufferedImage;
 
 @SuppressWarnings("unused")
 public class ModMixsonClient {
 
     public static void onInitialize() {
-
-        Mixson.setDebugMode(DebugMode.EXPORT);
 
         Mixson.registerEvent(
                 MixsonCodecs.PNG,
@@ -29,7 +25,7 @@ public class ModMixsonClient {
                 context -> {
 
                     Identifier large_id = MixsonUtil.removeExtension(context.getResourceId());
-                    Identifier small_id = Identifier.of(large_id.getNamespace(), large_id.getPath().replace("/large/", "/small/"));
+                    Identifier small_id = Identifier.fromNamespaceAndPath(large_id.getNamespace(), large_id.getPath().replace("/large/", "/small/"));
                     context.registerRuntimeEvent(
                             Mixson.DEFAULT_PRIORITY,
                             id -> id.equals(small_id),
@@ -49,7 +45,7 @@ public class ModMixsonClient {
                 "GrayscaleAllGeneratedEnchantmentIcons",
                 context -> {
                     Identifier resourceId = context.getResourceId();
-                    Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/generated/", "/generated/grayscale/"));
+                    Identifier newId = Identifier.fromNamespaceAndPath(resourceId.getNamespace(), resourceId.getPath().replace("/generated/", "/generated/grayscale/"));
                     BufferedImage grayscaleImage = grayscaleImage(context.getFile());
                     context.createResource(newId, grayscaleImage);
                 },
@@ -63,7 +59,7 @@ public class ModMixsonClient {
                 "GrayscaleAllSmallEnchantmentIcons",
                 context -> {
                     Identifier resourceId = context.getResourceId();
-                    Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/small/", "/generated/grayscale/small/"));
+                    Identifier newId = Identifier.fromNamespaceAndPath(resourceId.getNamespace(), resourceId.getPath().replace("/small/", "/generated/grayscale/small/"));
                     BufferedImage grayscaleImage = grayscaleImage(context.getFile());
                     context.createResource(newId, grayscaleImage);
                 },
@@ -77,7 +73,7 @@ public class ModMixsonClient {
                 "GrayscaleLargeSmallEnchantmentIcons",
                 context -> {
                     Identifier resourceId = context.getResourceId();
-                    Identifier newId = Identifier.of(resourceId.getNamespace(), resourceId.getPath().replace("/large/", "/generated/grayscale/large/"));
+                    Identifier newId = Identifier.fromNamespaceAndPath(resourceId.getNamespace(), resourceId.getPath().replace("/large/", "/generated/grayscale/large/"));
                     BufferedImage grayscaleImage = grayscaleImage(context.getFile());
                     context.createResource(newId, grayscaleImage);
                 },
@@ -130,48 +126,48 @@ public class ModMixsonClient {
                     );
                     finalImage.setRGB(offset + x, offset + y, newColor.getRGB());
                 }
-            Identifier identifier = Identifier.of(context.getResourceId().toString().replace("small", "generated").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
+            Identifier identifier = Identifier.parse(context.getResourceId().toString().replace("small", "generated").replace(".png", "")).withSuffix("/" + ((i - 16) / 2) + ".png");
             context.createResource(identifier, finalImage);
         }
     }
 
-    private static void debugLargeTextures(EventContext<BufferedImage> context, String unused) {
-        BufferedImage large = context.getFile();
-        BufferedImage croppedLarge = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
-        for(int x = 0; x < 40; x++) for(int y = 0; y < 40; y++) croppedLarge.setRGB(x, y, large.getRGB(x + 12, y + 12));
-        for(int i = 18; i <= 40; i += 2) {
-            BufferedImage scaled = toBufferedImage(croppedLarge.getScaledInstance(i, i, Image.SCALE_SMOOTH));
-            BufferedImage finalImg = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
-            int offset = (64 - i) / 2;
-            for(int x = 0; x < i; x++)
-                for(int y = 0; y < i; y++) {
-                    if (isCorner(x, y, i)) finalImg.setRGB(offset + x, offset + y, 0x00000000);
-                    else finalImg.setRGB(offset + x, offset + y, scaled.getRGB(x, y));
-                }
-            Identifier identifier = Identifier.of(context.getResourceId().toString().replace("/large/", "/generated/").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
-            context.createResource(identifier, finalImg);
-            Dunchanting.LOGGER.info("created resource: {}", identifier);
-        }
-    }
-
-    private static void debugSmallTextures(EventContext<BufferedImage> context, String small_id) {
-        BufferedImage small = context.getReference(small_id).retrieve().orElseThrow();
-        BufferedImage croppedSmall = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-        for(int x = 0; x < 16; x++) for(int y = 0; y < 16; y++) croppedSmall.setRGB(x, y, small.getRGB(x + 24, y + 24));
-        for(int i = 18; i <= 40; i += 2) {
-            BufferedImage scaled = toBufferedImage(croppedSmall.getScaledInstance(i, i, Image.SCALE_SMOOTH));
-            BufferedImage finalImg = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
-            int offset = (64 - i) / 2;
-            for(int x = 0; x < i; x++)
-                for(int y = 0; y < i; y++) {
-                    if (isCorner(x, y, i)) finalImg.setRGB(offset + x, offset + y, 0x00000000);
-                    else finalImg.setRGB(offset + x, offset + y, scaled.getRGB(x, y));
-                }
-            Identifier identifier = Identifier.of(context.getResourceId().toString().replace("large", "generated").replace(".png", "")).withSuffixedPath("/" + ((i - 16) / 2) + ".png");
-            context.createResource(identifier, finalImg);
-            Dunchanting.LOGGER.info("created resource: {}", identifier);
-        }
-    }
+//    private static void debugLargeTextures(EventContext<BufferedImage> context, String unused) {
+//        BufferedImage large = context.getFile();
+//        BufferedImage croppedLarge = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
+//        for(int x = 0; x < 40; x++) for(int y = 0; y < 40; y++) croppedLarge.setRGB(x, y, large.getRGB(x + 12, y + 12));
+//        for(int i = 18; i <= 40; i += 2) {
+//            BufferedImage scaled = toBufferedImage(croppedLarge.getScaledInstance(i, i, Image.SCALE_SMOOTH));
+//            BufferedImage finalImg = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+//            int offset = (64 - i) / 2;
+//            for(int x = 0; x < i; x++)
+//                for(int y = 0; y < i; y++) {
+//                    if (isCorner(x, y, i)) finalImg.setRGB(offset + x, offset + y, 0x00000000);
+//                    else finalImg.setRGB(offset + x, offset + y, scaled.getRGB(x, y));
+//                }
+//            Identifier identifier = Identifier.parse(context.getResourceId().toString().replace("/large/", "/generated/").replace(".png", "")).withSuffix("/" + ((i - 16) / 2) + ".png");
+//            context.createResource(identifier, finalImg);
+//            Dunchanting.LOGGER.info("created resource: {}", identifier);
+//        }
+//    }
+//
+//    private static void debugSmallTextures(EventContext<BufferedImage> context, String small_id) {
+//        BufferedImage small = context.getReference(small_id).retrieve().orElseThrow();
+//        BufferedImage croppedSmall = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+//        for(int x = 0; x < 16; x++) for(int y = 0; y < 16; y++) croppedSmall.setRGB(x, y, small.getRGB(x + 24, y + 24));
+//        for(int i = 18; i <= 40; i += 2) {
+//            BufferedImage scaled = toBufferedImage(croppedSmall.getScaledInstance(i, i, Image.SCALE_SMOOTH));
+//            BufferedImage finalImg = new BufferedImage(64, 64, BufferedImage.TYPE_INT_ARGB);
+//            int offset = (64 - i) / 2;
+//            for(int x = 0; x < i; x++)
+//                for(int y = 0; y < i; y++) {
+//                    if (isCorner(x, y, i)) finalImg.setRGB(offset + x, offset + y, 0x00000000);
+//                    else finalImg.setRGB(offset + x, offset + y, scaled.getRGB(x, y));
+//                }
+//            Identifier identifier = Identifier.parse(context.getResourceId().toString().replace("large", "generated").replace(".png", "")).withSuffix("/" + ((i - 16) / 2) + ".png");
+//            context.createResource(identifier, finalImg);
+//            Dunchanting.LOGGER.info("created resource: {}", identifier);
+//        }
+//    }
 
     private static boolean isCorner(int x, int y, int i) {
         return (manhattanDistance(x, y, i - 1, i - 1) <= i / 2d - 1) ||

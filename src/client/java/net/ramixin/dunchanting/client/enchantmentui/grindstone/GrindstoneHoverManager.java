@@ -1,14 +1,14 @@
 package net.ramixin.dunchanting.client.enchantmentui.grindstone;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.enchantment.EnchantmentHelper;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Language;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.Holder;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchanting.client.util.ModClientUtils;
@@ -17,7 +17,7 @@ import net.ramixin.dunchanting.items.components.EnchantmentOptions;
 import net.ramixin.dunchanting.items.components.EnchantmentSlot;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModTags;
-import net.ramixin.dunchanting.util.ModUtils;
+import net.ramixin.dunchanting.util.ModUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,20 +41,19 @@ public class GrindstoneHoverManager extends AbstractUIHoverManager {
     }
 
     @Override
-    public void render(AbstractEnchantmentUIElement element, ItemStack stack, DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY, int relX, int relY) {
+    public void render(AbstractEnchantmentUIElement element, ItemStack stack, GuiGraphics context, Font textRenderer, int mouseX, int mouseY, int relX, int relY) {
         changePointColor = false;
-        //noinspection DuplicatedCode
         if(activeHoverOption == -1) return;
+        //noinspection DuplicatedCode
         int optionIndex = activeHoverOption % 3;
         int index = activeHoverOption / 3;
         EnchantmentOptions options = element.getEnchantmentOptions();
-        if(options.isLocked(index)) return;
+        if(options.hasEmptySlot(index)) return;
         EnchantmentSlot option = options.getOrThrow(index);
         if(option.isLocked(optionIndex)) return;
-        RegistryEntry<Enchantment> enchant = option.getOrThrow(optionIndex);
-        int enchantLevel = EnchantmentHelper.getLevel(enchant, stack);
-        if(enchant == null) return;
-        boolean powerful = enchant.isIn(ModTags.POWERFUL_ENCHANTMENT);
+        Holder<Enchantment> enchant = option.getOrThrow(optionIndex);
+        int enchantLevel = EnchantmentHelper.getItemEnchantmentLevel(enchant, stack);
+        boolean powerful = enchant.is(ModTags.POWERFUL_ENCHANTMENT);
         TooltipRenderer renderer = new TooltipRenderer(context, textRenderer, mouseX, mouseY);
         if(ModClientUtils.markAsUnavailable(element, activeHoverOption, enchant)) {
             renderUnavailableTooltip(enchant, powerful, renderer);
@@ -63,19 +62,19 @@ public class GrindstoneHoverManager extends AbstractUIHoverManager {
         renderInfoTooltip(enchant, powerful, enchantLevel, renderer, true, false, false, false, false, true, true);
         renderer.resetHeight();
 
-        String clickText = Language.getInstance().get("container.grindstone.disenchant");
-        List<String> rawClickText = ModUtils.textWrapString(clickText, 20);
-        List<Text> finalClickText = new ArrayList<>();
-        int clickWidth = ModUtils.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, Formatting.GREEN);
+        String clickText = Language.getInstance().getOrDefault("container.grindstone.disenchant");
+        List<String> rawClickText = ModUtil.textWrapString(clickText, 20);
+        List<Component> finalClickText = new ArrayList<>();
+        int clickWidth = ModUtil.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, ChatFormatting.GREEN);
         renderer.render(finalClickText, -30 - clickWidth, 0);
 
-        int attribution = ModUtils.getAttributionOnItem(playerUUID, stack, index);
+        int attribution = ModUtil.getAttributionOnItem(playerUUID, stack, index);
         if(attribution <= 0) return;
         changePointColor = true;
-        String attributionText = String.format(Language.getInstance().get("container.grindstone.attribution"), attribution, attribution == 1 ? "" : "s");
-        List<String> rawAttributionText = ModUtils.textWrapString(attributionText, 20);
-        List<Text> finalAttributionText = new ArrayList<>();
-        int attributionWidth = ModUtils.convertStringListToText(rawAttributionText, finalAttributionText, renderer::getTextWidth, Formatting.LIGHT_PURPLE);
+        String attributionText = String.format(Language.getInstance().getOrDefault("container.grindstone.attribution"), attribution, attribution == 1 ? "" : "s");
+        List<String> rawAttributionText = ModUtil.textWrapString(attributionText, 20);
+        List<Component> finalAttributionText = new ArrayList<>();
+        int attributionWidth = ModUtil.convertStringListToText(rawAttributionText, finalAttributionText, renderer::getTextWidth, ChatFormatting.LIGHT_PURPLE);
         renderer.render(finalAttributionText, -30 - attributionWidth, 1);
     }
 

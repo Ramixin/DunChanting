@@ -1,7 +1,7 @@
 package net.ramixin.dunchanting.client.util;
 
-import net.minecraft.client.util.SpriteIdentifier;
-import net.minecraft.util.Identifier;
+import net.minecraft.client.resources.model.Material;
+import net.minecraft.resources.Identifier;
 import net.ramixin.dunchanting.Dunchanting;
 import net.ramixin.dunchanting.client.DunchantingClient;
 
@@ -36,7 +36,7 @@ public interface ModTextures {
     Identifier lockedEnchantmentOption = Dunchanting.id("container/enchanting_table/locked_small");
     Identifier LockedEnchantmentSlot = Dunchanting.id("container/enchanting_table/locked");
     Identifier enchantmentOptionBackdrop = Dunchanting.id("container/enchanting_table/selection_small");
-    SpriteIdentifier missingIcon = new SpriteIdentifier(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.ofVanilla("missingno"));
+    Material missingIcon = new Material(DunchantingClient.ENCHANTMENT_ICONS_ATLAS_TEXTURE, Identifier.withDefaultNamespace("missingno"));
 
     Identifier anvilTextFieldBackdrop = Dunchanting.id("container/anvil/text_backdrop");
 

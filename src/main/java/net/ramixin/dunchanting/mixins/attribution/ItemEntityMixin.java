@@ -1,12 +1,12 @@
 package net.ramixin.dunchanting.mixins.attribution;
 
-import net.minecraft.entity.Entity;
-import net.minecraft.entity.EntityType;
-import net.minecraft.entity.ItemEntity;
-import net.minecraft.entity.damage.DamageSource;
-import net.minecraft.item.ItemStack;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.damagesource.DamageSource;
+import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.ramixin.dunchanting.AttributionManager;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -18,22 +18,22 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(ItemEntity.class)
 public abstract class ItemEntityMixin extends Entity {
 
-    public ItemEntityMixin(EntityType<?> type, World world) {
+    public ItemEntityMixin(EntityType<?> type, Level world) {
         super(type, world);
     }
 
-    @Shadow public abstract ItemStack getStack();
+    @Shadow public abstract ItemStack getItem();
 
-    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;discard()V", ordinal = 1))
+    @Inject(method = "tick", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V", ordinal = 1))
     private void redistributePointsOnItemDiscard(CallbackInfo ci) {
-        if(!(getEntityWorld() instanceof ServerWorld world)) return;
-        ItemStack stack = getStack();
+        if(!(level() instanceof ServerLevel world)) return;
+        ItemStack stack = getItem();
         AttributionManager.redistribute(stack, world);
     }
 
-    @Inject(method = "damage", at = @At(value = "INVOKE", target = "Lnet/minecraft/entity/ItemEntity;discard()V"))
-    private void redistributePointsOnItemDestroyed(ServerWorld world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
-        ItemStack stack = getStack();
+    @Inject(method = "hurtServer", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/entity/item/ItemEntity;discard()V"))
+    private void redistributePointsOnItemDestroyed(ServerLevel world, DamageSource source, float amount, CallbackInfoReturnable<Boolean> cir) {
+        ItemStack stack = getItem();
         AttributionManager.redistribute(stack, world);
     }
 

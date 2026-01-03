@@ -1,19 +1,19 @@
 package net.ramixin.dunchanting.loot;
 
-import net.minecraft.predicate.component.ComponentPredicate;
-import net.minecraft.predicate.component.ComponentSubPredicate;
-import net.minecraft.registry.Registries;
-import net.minecraft.registry.Registry;
+import com.mojang.serialization.Codec;
+import net.minecraft.advancements.criterion.SingleComponentItemPredicate;
+import net.minecraft.core.Registry;
+import net.minecraft.core.component.predicates.DataComponentPredicate;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.ramixin.dunchanting.Dunchanting;
 
 public class ModSubPredicateTypes {
 
     @SuppressWarnings("unused")
-    public static final ComponentSubPredicate.Type<EnchantmentLevelChancePredicate> LEVELED_CHANCE = register("leveled_chance", new ComponentSubPredicate.Type<>(EnchantmentLevelChancePredicate.CODEC));
+    public static final SingleComponentItemPredicate.Type<EnchantmentLevelChancePredicate> LEVELED_CHANCE = register("leveled_chance", EnchantmentLevelChancePredicate.CODEC);
 
-    private static <T extends ComponentPredicate> ComponentSubPredicate.Type<T> register(String id, ComponentSubPredicate.Type<T> type) {
-        return Registry.register(
-                Registries.DATA_COMPONENT_PREDICATE_TYPE, Dunchanting.id(id), type);
+    private static <T extends DataComponentPredicate> SingleComponentItemPredicate.Type<T> register(String id, Codec<T> codec) {
+        return Registry.register(BuiltInRegistries.DATA_COMPONENT_PREDICATE_TYPE, Dunchanting.id(id), new DataComponentPredicate.ConcreteType<>(codec));
     }
 
     public static void onInitialize() {}

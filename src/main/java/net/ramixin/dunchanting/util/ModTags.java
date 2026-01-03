@@ -1,8 +1,8 @@
 package net.ramixin.dunchanting.util;
 
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.tag.TagKey;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.ramixin.dunchanting.Dunchanting;
 
 public interface ModTags {
@@ -10,7 +10,7 @@ public interface ModTags {
     TagKey<Enchantment> POWERFUL_ENCHANTMENT = of("powerful_enchantment");
 
     private static TagKey<Enchantment> of(String id) {
-        return TagKey.of(RegistryKeys.ENCHANTMENT, Dunchanting.id(id));
+        return TagKey.create(Registries.ENCHANTMENT, Dunchanting.id(id));
     }
 
 }

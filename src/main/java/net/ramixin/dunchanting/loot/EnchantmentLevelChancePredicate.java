@@ -2,31 +2,32 @@ package net.ramixin.dunchanting.loot;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import net.minecraft.component.ComponentType;
-import net.minecraft.component.DataComponentTypes;
-import net.minecraft.component.type.ItemEnchantmentsComponent;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.predicate.component.ComponentSubPredicate;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.registry.entry.RegistryFixedCodec;
-import net.minecraft.util.math.random.Random;
+import net.minecraft.advancements.criterion.SingleComponentItemPredicate;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponentType;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.RegistryFixedCodec;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
+import org.jspecify.annotations.NonNull;
 
-public record EnchantmentLevelChancePredicate(RegistryEntry<Enchantment> enchantment) implements ComponentSubPredicate<ItemEnchantmentsComponent> {
+public record EnchantmentLevelChancePredicate(Holder<Enchantment> enchantment) implements SingleComponentItemPredicate<ItemEnchantments> {
 
-    private static final Random RANDOM = Random.create();
+    private static final RandomSource RANDOM = RandomSource.create();
     public static final Codec<EnchantmentLevelChancePredicate> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            RegistryFixedCodec.of(RegistryKeys.ENCHANTMENT).fieldOf("enchantment").forGetter(EnchantmentLevelChancePredicate::enchantment)
+            RegistryFixedCodec.create(Registries.ENCHANTMENT).fieldOf("enchantment").forGetter(EnchantmentLevelChancePredicate::enchantment)
     ).apply(instance, EnchantmentLevelChancePredicate::new));
 
     @Override
-    public ComponentType<ItemEnchantmentsComponent> getComponentType() {
-        return DataComponentTypes.ENCHANTMENTS;
+    public @NonNull DataComponentType<ItemEnchantments> componentType() {
+        return DataComponents.ENCHANTMENTS;
     }
 
     @Override
-    public boolean test(ItemEnchantmentsComponent component) {
+    public boolean matches(ItemEnchantments component) {
         int level = component.getLevel(enchantment);
-        return level >= RANDOM.nextBetween(1, 3);
+        return level >= RANDOM.nextIntBetweenInclusive(1, 3);
     }
 }

@@ -7,36 +7,40 @@ import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.brigadier.tree.CommandNode;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.command.CommandRegistryAccess;
-import net.minecraft.command.EntitySelector;
-import net.minecraft.command.argument.EntityArgumentType;
-import net.minecraft.command.argument.RegistryEntryReferenceArgumentType;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.RegistryKeys;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.server.command.CommandManager;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.text.Text;
+import net.minecraft.commands.CommandBuildContext;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.commands.Commands;
+import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.ResourceArgument;
+import net.minecraft.commands.arguments.selector.EntitySelector;
+import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.permissions.Permissions;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.ramixin.dunchanting.items.components.EnchantmentOptions;
-import net.ramixin.dunchanting.items.components.ModItemComponents;
+import net.ramixin.dunchanting.items.components.Gilded;
+import net.ramixin.dunchanting.items.components.ModDataComponents;
 import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
-import net.ramixin.dunchanting.util.ModUtils;
-import net.ramixin.dunchanting.util.PlayerEntityDuck;
+import net.ramixin.dunchanting.util.ModUtil;
+import net.ramixin.dunchanting.util.PlayerDuck;
 
 public class ModCommands {
 
     private static final SimpleCommandExceptionType NEGATIVE_POINTS = new SimpleCommandExceptionType(
-            Text.translatable("commands.player.enchantment_points.negative")
+            Component.translatable("commands.player.enchantment_points.negative")
     );
 
     private static final SimpleCommandExceptionType PLAYER_NOT_FOUND = new SimpleCommandExceptionType(
-            Text.translatable("commands.player.enchantment_points.player_not_found")
+            Component.translatable("commands.player.enchantment_points.player_not_found")
     );
 
-    public static void register(CommandNode<ServerCommandSource> rootNode, CommandRegistryAccess registryAccess) {
-        CommandNode<ServerCommandSource> enchanting = CommandManager.literal("enchanting").requires(source -> source.hasPermissionLevel(2)).build();
+    public static void register(CommandNode<CommandSourceStack> rootNode, CommandBuildContext registryAccess) {
+        CommandNode<CommandSourceStack> enchanting = Commands.literal("enchanting").requires(source -> source.permissions().hasPermission(Permissions.COMMANDS_ADMIN)).build();
 
         enchanting.addChild(createPointsCommand());
         enchanting.addChild(createItemCommand(registryAccess));
@@ -44,31 +48,86 @@ public class ModCommands {
         rootNode.addChild(enchanting);
     }
 
-    private static CommandNode<ServerCommandSource> createItemCommand(CommandRegistryAccess registryAccess) {
-        CommandNode<ServerCommandSource> item = CommandManager.literal("item").build();
+    private static CommandNode<CommandSourceStack> createItemCommand(CommandBuildContext registryAccess) {
+        CommandNode<CommandSourceStack> item = Commands.literal("item").build();
 
         item.addChild(createReRoll());
         item.addChild(createModify(registryAccess));
+        item.addChild(createGildingCommand(registryAccess));
 
         return item;
     }
 
-    private static LiteralCommandNode<ServerCommandSource> createModify(CommandRegistryAccess registryAccess) {
-        return CommandManager.literal("modify")
-                .then(CommandManager.argument("slotId", IntegerArgumentType.integer(0, 2))
-                        .then(CommandManager.argument("optionId", IntegerArgumentType.integer(0, 2))
-                                .then(CommandManager.argument("enchantment", RegistryEntryReferenceArgumentType.registryEntry(registryAccess, RegistryKeys.ENCHANTMENT))
+    private static CommandNode<CommandSourceStack> createGildingCommand(CommandBuildContext registryAccess) {
+        CommandNode<CommandSourceStack> gilding = Commands.literal("gilding").build();
+
+        gilding.addChild(createSetGilding(registryAccess));
+        gilding.addChild(createRemoveGilding());
+
+        return gilding;
+    }
+
+    private static LiteralCommandNode<CommandSourceStack> createRemoveGilding() {
+        return Commands.literal("remove")
+                .executes(ctx -> {
+                    ServerPlayer player = ctx.getSource().getPlayer();
+                    if(player == null) throw PLAYER_NOT_FOUND.create();
+                    ItemStack stack = player.getMainHandItem();
+                    stack.remove(ModDataComponents.GILDED);
+                    ctx.getSource().sendSuccess(() -> Component.translatable("commands.player.enchanting.gilding.remove.success"), false);
+                    return 1;
+                }).build();
+    }
+
+    private static LiteralCommandNode<CommandSourceStack> createSetGilding(CommandBuildContext registryAccess) {
+        return Commands.literal("set")
+                .then(Commands.argument("enchantment", ResourceArgument.resource(registryAccess, Registries.ENCHANTMENT))
+                        .then(Commands.argument("level", IntegerArgumentType.integer(0))
+                                .executes(ctx -> {
+                                    Holder<Enchantment> entry = ResourceArgument.getEnchantment(ctx, "enchantment");
+                                    int targetLevel = IntegerArgumentType.getInteger(ctx, "level");
+                                    int levelToSet = Math.min(entry.value().getMaxLevel(), targetLevel);
+                                    ServerPlayer player = ctx.getSource().getPlayer();
+                                    if(player == null) throw PLAYER_NOT_FOUND.create();
+                                    ItemStack stack = player.getMainHandItem();
+
+                                    ItemEnchantments enchantments = stack.get(DataComponents.ENCHANTMENTS);
+                                    ItemEnchantments.Mutable builder;
+                                    if(enchantments == null || enchantments == ItemEnchantments.EMPTY) {
+                                        builder = new ItemEnchantments.Mutable(ItemEnchantments.EMPTY);
+                                    } else {
+                                        builder = new ItemEnchantments.Mutable(enchantments);
+
+                                        Gilded gilded = stack.get(ModDataComponents.GILDED);
+                                        if(gilded != null)
+                                            builder.removeIf(holder -> holder.value().equals(gilded.enchantmentEntry().value()));
+
+                                    }
+                                    builder.set(entry, levelToSet);
+                                    stack.set(DataComponents.ENCHANTMENTS, builder.toImmutable());
+                                    stack.set(ModDataComponents.GILDED, new Gilded(entry));
+                                    ctx.getSource().sendSuccess(() -> Component.translatable("commands.player.enchanting.gilding.set.success"), false);
+                                    return 1;
+                                })
+                        )).build();
+    }
+
+    private static LiteralCommandNode<CommandSourceStack> createModify(CommandBuildContext registryAccess) {
+        return Commands.literal("modify")
+                .then(Commands.argument("slotId", IntegerArgumentType.integer(0, 2))
+                        .then(Commands.argument("optionId", IntegerArgumentType.integer(0, 2))
+                                .then(Commands.argument("enchantment", ResourceArgument.resource(registryAccess, Registries.ENCHANTMENT))
                                         .executes(ctx -> {
-                                            RegistryEntry<Enchantment> entry = RegistryEntryReferenceArgumentType.getEnchantment(ctx, "enchantment");
+                                            Holder<Enchantment> entry = ResourceArgument.getEnchantment(ctx, "enchantment");
                                             int slotId = IntegerArgumentType.getInteger(ctx, "slotId");
                                             int optionId = IntegerArgumentType.getInteger(ctx, "optionId");
-                                            ServerPlayerEntity player = ctx.getSource().getPlayer();
+                                            ServerPlayer player = ctx.getSource().getPlayer();
                                             if(player == null) throw PLAYER_NOT_FOUND.create();
-                                            ItemStack stack = player.getMainHandStack();
-                                            EnchantmentOptions options = stack.getOrDefault(ModItemComponents.ENCHANTMENT_OPTIONS, EnchantmentOptions.DEFAULT);
+                                            ItemStack stack = player.getMainHandItem();
+                                            EnchantmentOptions options = stack.getOrDefault(ModDataComponents.UNLOCKED_ENCHANTMENT_OPTIONS, EnchantmentOptions.DEFAULT);
                                             EnchantmentOptions newOptions = options.withEnchantment(entry, slotId, optionId);
-                                            stack.set(ModItemComponents.ENCHANTMENT_OPTIONS, newOptions);
-                                            ctx.getSource().sendFeedback(() -> Text.translatable("commands.player.enchanting.modify.success", slotId, optionId), false);
+                                            stack.set(ModDataComponents.UNLOCKED_ENCHANTMENT_OPTIONS, newOptions);
+                                            ctx.getSource().sendSuccess(() -> Component.translatable("commands.player.enchanting.modify.success", slotId, optionId), false);
                                             return 1;
                                         })
                                 )
@@ -77,49 +136,52 @@ public class ModCommands {
                 .build();
     }
 
-    private static LiteralCommandNode<ServerCommandSource> createReRoll() {
-        return CommandManager.literal("reroll")
+    private static LiteralCommandNode<CommandSourceStack> createReRoll() {
+        return Commands.literal("reroll")
                 .executes(ModCommands::runReroll)
-                .then(CommandManager.argument("level", IntegerArgumentType.integer(0, Integer.MAX_VALUE))
+                .then(Commands.argument("level", IntegerArgumentType.integer(0, Integer.MAX_VALUE))
                         .executes(ctx -> runReroll(ctx, IntegerArgumentType.getInteger(ctx, "level")))
                 ).build();
     }
 
-    private static int runReroll(CommandContext<ServerCommandSource> ctx) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayer();
+    private static int runReroll(CommandContext<CommandSourceStack> ctx) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayer();
         if(player == null) throw PLAYER_NOT_FOUND.create();
         return runReroll(ctx, player.experienceLevel);
     }
 
-    private static int runReroll(CommandContext<ServerCommandSource> ctx, int level) throws CommandSyntaxException {
-        ServerPlayerEntity player = ctx.getSource().getPlayer();
+    private static int runReroll(CommandContext<CommandSourceStack> ctx, int level) throws CommandSyntaxException {
+        ServerPlayer player = ctx.getSource().getPlayer();
         if(player == null) throw PLAYER_NOT_FOUND.create();
-        ItemStack stack = player.getMainHandStack();
-        ModUtils.generateEnchantmentOptions(stack, ctx.getSource().getWorld(), level);
-        ctx.getSource().sendFeedback(() -> Text.translatable("commands.player.enchantment_points.reroll.success"), false);
+        ItemStack stack = player.getMainHandItem();
+        stack.remove(ModDataComponents.UNLOCKED_ENCHANTMENT_OPTIONS);
+        stack.remove(ModDataComponents.LOCKED_ENCHANTMENT_OPTIONS);
+        stack.remove(ModDataComponents.SELECTED_ENCHANTMENTS);
+        ModUtil.generateComponents(stack, ctx.getSource().getLevel(), level);
+        ctx.getSource().sendSuccess(() -> Component.translatable("commands.player.enchantment_points.reroll.success"), false);
         return 1;
     }
 
-    private static CommandNode<ServerCommandSource> createPointsCommand() {
-        CommandNode<ServerCommandSource> points = CommandManager.literal("points").build();
+    private static CommandNode<CommandSourceStack> createPointsCommand() {
+        CommandNode<CommandSourceStack> points = Commands.literal("points").build();
 
-        points.addChild(createGet());
-        points.addChild(createSet());
-        points.addChild(createAdd());
+        points.addChild(createGetPoints());
+        points.addChild(createSetPoints());
+        points.addChild(createAddPoints());
 
         return points;
     }
 
-    private static LiteralCommandNode<ServerCommandSource> createGet() {
-        return CommandManager.literal("get")
-                .then(CommandManager.argument("player", EntityArgumentType.player())
+    private static LiteralCommandNode<CommandSourceStack> createGetPoints() {
+        return Commands.literal("get")
+                .then(Commands.argument("player", EntityArgument.player())
                         .executes(context -> {
                             EntitySelector selector = context.getArgument("player", EntitySelector.class);
-                            ServerPlayerEntity player = selector.getPlayer(context.getSource());
-                            PlayerEntityDuck duck = (PlayerEntityDuck) player;
+                            ServerPlayer player = selector.findSinglePlayer(context.getSource());
+                            PlayerDuck duck = (PlayerDuck) player;
                             int points = duck.dungeonEnchants$getEnchantmentPoints();
-                            context.getSource().sendFeedback(
-                                    () -> Text.translatable(
+                            context.getSource().sendSuccess(
+                                    () -> Component.translatable(
                                             "commands.player.enchantment_points.get",
                                             player.getName(),
                                             points,
@@ -132,21 +194,21 @@ public class ModCommands {
                 ).build();
     }
 
-    private static LiteralCommandNode<ServerCommandSource> createSet() {
-        return CommandManager.literal("set")
-                .then(CommandManager.argument("player", EntityArgumentType.player())
-                        .then(CommandManager.argument("points", IntegerArgumentType.integer())
+    private static LiteralCommandNode<CommandSourceStack> createSetPoints() {
+        return Commands.literal("set")
+                .then(Commands.argument("player", EntityArgument.player())
+                        .then(Commands.argument("points", IntegerArgumentType.integer())
                                 .executes(
                                         context -> {
                                             EntitySelector selector = context.getArgument("player", EntitySelector.class);
-                                            ServerPlayerEntity player = selector.getPlayer(context.getSource());
-                                            PlayerEntityDuck duck = (PlayerEntityDuck) player;
+                                            ServerPlayer player = selector.findSinglePlayer(context.getSource());
+                                            PlayerDuck duck = (PlayerDuck) player;
                                             int requiredPoints = IntegerArgumentType.getInteger(context, "points");
                                             if(requiredPoints < 0) throw NEGATIVE_POINTS.create();
                                             duck.dungeonEnchants$setEnchantmentPoints(requiredPoints);
                                             int points = duck.dungeonEnchants$getEnchantmentPoints();
-                                            context.getSource().sendFeedback(
-                                                    () -> Text.translatable(
+                                            context.getSource().sendSuccess(
+                                                    () -> Component.translatable(
                                                             "commands.player.enchantment_points.set",
                                                             player.getName(),
                                                             points
@@ -161,21 +223,21 @@ public class ModCommands {
                 ).build();
     }
 
-    private static LiteralCommandNode<ServerCommandSource> createAdd() {
-        return CommandManager.literal("add")
-                .then(CommandManager.argument("player", EntityArgumentType.player())
-                        .then(CommandManager.argument("points", IntegerArgumentType.integer())
+    private static LiteralCommandNode<CommandSourceStack> createAddPoints() {
+        return Commands.literal("add")
+                .then(Commands.argument("player", EntityArgument.player())
+                        .then(Commands.argument("points", IntegerArgumentType.integer())
                                 .executes(
                                         context -> {
                                             EntitySelector selector = context.getArgument("player", EntitySelector.class);
-                                            ServerPlayerEntity player = selector.getPlayer(context.getSource());
-                                            PlayerEntityDuck duck = (PlayerEntityDuck) player;
+                                            ServerPlayer player = selector.findSinglePlayer(context.getSource());
+                                            PlayerDuck duck = (PlayerDuck) player;
                                             int deltaPoints = IntegerArgumentType.getInteger(context, "points");
                                             if(duck.dungeonEnchants$getEnchantmentPoints() + deltaPoints < 0) throw NEGATIVE_POINTS.create();
                                             duck.dungeonEnchants$changeEnchantmentPoints(deltaPoints);
                                             int points = duck.dungeonEnchants$getEnchantmentPoints();
-                                            context.getSource().sendFeedback(
-                                                    () -> Text.translatable(
+                                            context.getSource().sendSuccess(
+                                                    () -> Component.translatable(
                                                             "commands.player.enchantment_points.add",
                                                             deltaPoints,
                                                             deltaPoints == 1 ? "" : "s",

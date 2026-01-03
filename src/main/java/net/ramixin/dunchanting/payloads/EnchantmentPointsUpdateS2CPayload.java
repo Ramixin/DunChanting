@@ -1,27 +1,28 @@
 package net.ramixin.dunchanting.payloads;
 
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.network.packet.CustomPayload;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.ramixin.dunchanting.Dunchanting;
+import org.jspecify.annotations.NonNull;
 
-public record EnchantmentPointsUpdateS2CPayload(int value) implements CustomPayload {
+public record EnchantmentPointsUpdateS2CPayload(int value) implements CustomPacketPayload {
 
-    public static final CustomPayload.Id<EnchantmentPointsUpdateS2CPayload> PACKET_ID = new CustomPayload.Id<>(Dunchanting.id("enchantment_points_update"));
-    public static final PacketCodec<RegistryByteBuf, EnchantmentPointsUpdateS2CPayload> PACKET_CODEC = PacketCodec.of(EnchantmentPointsUpdateS2CPayload::write, EnchantmentPointsUpdateS2CPayload::new);
+    public static final CustomPacketPayload.Type<EnchantmentPointsUpdateS2CPayload> PACKET_ID = new CustomPacketPayload.Type<>(Dunchanting.id("enchantment_points_update"));
+    public static final StreamCodec<RegistryFriendlyByteBuf, EnchantmentPointsUpdateS2CPayload> PACKET_CODEC = StreamCodec.ofMember(EnchantmentPointsUpdateS2CPayload::write, EnchantmentPointsUpdateS2CPayload::new);
 
 
-    public EnchantmentPointsUpdateS2CPayload(RegistryByteBuf buf) {
+    public EnchantmentPointsUpdateS2CPayload(RegistryFriendlyByteBuf buf) {
         this(buf.readInt());
     }
 
-    private void write(RegistryByteBuf buf) {
+    private void write(RegistryFriendlyByteBuf buf) {
         buf.writeInt(value);
     }
 
 
     @Override
-    public Id<? extends CustomPayload> getId() {
+    public @NonNull Type<? extends CustomPacketPayload> type() {
         return PACKET_ID;
     }
 }

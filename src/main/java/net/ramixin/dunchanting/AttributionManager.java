@@ -1,19 +1,19 @@
 package net.ramixin.dunchanting;
 
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtElement;
-import net.minecraft.nbt.NbtList;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Uuids;
+import net.minecraft.core.UUIDUtil;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.ramixin.dunchanting.items.components.AttributionEntry;
 import net.ramixin.dunchanting.items.components.Attributions;
-import net.ramixin.dunchanting.items.components.ModItemComponents;
+import net.ramixin.dunchanting.items.components.ModDataComponents;
 import net.ramixin.dunchanting.payloads.EnchantmentPointsUpdateS2CPayload;
-import net.ramixin.dunchanting.util.PlayerEntityDuck;
+import net.ramixin.dunchanting.util.PlayerDuck;
 
 import java.util.*;
 
@@ -21,13 +21,13 @@ public class AttributionManager {
 
     private static final Map<UUID, Integer> pointsToDistribute = Collections.synchronizedMap(new HashMap<>());
 
-    public static void redistribute(ItemStack stack, ServerWorld world) {
+    public static void redistribute(ItemStack stack, ServerLevel world) {
         for(int i = 0; i < 4; i++)
             redistribute(stack, world, i);
     }
 
-    public static void redistribute(ItemStack stack, ServerWorld world, int slotId) {
-        Attributions attributions = stack.get(ModItemComponents.ATTRIBUTIONS);
+    public static void redistribute(ItemStack stack, ServerLevel world, int slotId) {
+        Attributions attributions = stack.get(ModDataComponents.ATTRIBUTIONS);
         if (attributions == null) return;
         List<AttributionEntry> entries;
         if(slotId == 3)
@@ -36,9 +36,9 @@ public class AttributionManager {
             entries = attributions.get(slotId);
         for(AttributionEntry entry : entries) {
             UUID uuid = entry.playerUUID();
-            PlayerEntity player = world.getPlayerByUuid(uuid);
-            if((player instanceof ServerPlayerEntity serverPlayer)) {
-                PlayerEntityDuck duck = (PlayerEntityDuck) serverPlayer;
+            Player player = world.getPlayerByUUID(uuid);
+            if((player instanceof ServerPlayer serverPlayer)) {
+                PlayerDuck duck = (PlayerDuck) serverPlayer;
                 duck.dungeonEnchants$changeEnchantmentPoints(entry.points());
                 int points = duck.dungeonEnchants$getEnchantmentPoints();
                 ServerPlayNetworking.send(serverPlayer, new EnchantmentPointsUpdateS2CPayload(points));
@@ -55,22 +55,22 @@ public class AttributionManager {
         return pointsToDistribute.remove(uuid);
     }
 
-    public static void save(NbtCompound root) {
-        NbtList entries = new NbtList();
+    public static void save(CompoundTag root) {
+        ListTag entries = new ListTag();
         for(Map.Entry<UUID, Integer> entry : pointsToDistribute.entrySet()) {
-            NbtCompound tag = new NbtCompound();
-            tag.put("uuid", Uuids.INT_STREAM_CODEC, entry.getKey());
+            CompoundTag tag = new CompoundTag();
+            tag.store("uuid", UUIDUtil.CODEC, entry.getKey());
             tag.putInt("points", entry.getValue());
             entries.add(tag);
         }
         root.put("attributions", entries);
     }
 
-    public static void load(NbtCompound root) {
-        NbtList entries = root.getList("attributions").orElseThrow() ;
-        for(NbtElement entry : entries) {
-            NbtCompound tag = (NbtCompound) entry;
-            UUID uuid = tag.get("uuid", Uuids.INT_STREAM_CODEC).orElseThrow();
+    public static void load(CompoundTag root) {
+        ListTag entries = root.getList("attributions").orElseThrow() ;
+        for(Tag entry : entries) {
+            CompoundTag tag = (CompoundTag) entry;
+            UUID uuid = tag.read("uuid", UUIDUtil.CODEC).orElseThrow();
             pointsToDistribute.put(uuid, tag.getInt("points").orElseThrow() );
         }
     }

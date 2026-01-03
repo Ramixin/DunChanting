@@ -1,10 +1,10 @@
 package net.ramixin.dunchanting.client.util;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.client.gui.tooltip.HoveredTooltipPositioner;
-import net.minecraft.client.gui.tooltip.TooltipComponent;
-import net.minecraft.text.Text;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.gui.screens.inventory.tooltip.DefaultTooltipPositioner;
+import net.minecraft.network.chat.Component;
 import org.apache.commons.lang3.mutable.MutableInt;
 
 import java.util.List;
@@ -12,13 +12,13 @@ import java.util.function.Consumer;
 
 public class TooltipRenderer {
 
-    private final Consumer<Consumer<DrawContext>> tooltipBatcher;
-    private final TextRenderer textRenderer;
+    private final Consumer<Consumer<GuiGraphics>> tooltipBatcher;
+    private final Font textRenderer;
     private final int mouseX;
     private final int mouseY;
     private final MutableInt height = new MutableInt();
 
-    public TooltipRenderer(DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY) {
+    public TooltipRenderer(GuiGraphics context, Font textRenderer, int mouseX, int mouseY) {
         DrawContentDuck duck = DrawContentDuck.get(context);
         duck.dunchanting$enableTooltipBatching();
         this.tooltipBatcher = duck::dunchanting$addTooltipToBatch;
@@ -27,14 +27,14 @@ public class TooltipRenderer {
         this.mouseY = mouseY;
     }
 
-    public void render(List<Text> text, int xOffset, int yOffset) {
+    public void render(List<Component> text, int xOffset, int yOffset) {
         tooltipBatcher.accept(context -> {
-            context.drawTooltipImmediately(
+            context.renderTooltip(
                     textRenderer,
-                    text.stream().map(Text::asOrderedText).map(TooltipComponent::of).toList(),
+                    text.stream().map(Component::getVisualOrderText).map(ClientTooltipComponent::create).toList(),
                     mouseX + xOffset,
-                    mouseY + yOffset + height.getValue(),
-                    HoveredTooltipPositioner.INSTANCE,
+                    mouseY + yOffset + (int) height.get(),
+                    DefaultTooltipPositioner.INSTANCE,
                     null);
             height.add(yOffset);
             if(text.isEmpty()) return;
@@ -49,11 +49,11 @@ public class TooltipRenderer {
     }
 
     public int getTextWidth(String text) {
-        return textRenderer.getWidth(text);
+        return textRenderer.width(text);
     }
 
-    public int getTextWidth(Text text) {
-        return textRenderer.getWidth(text);
+    public int getTextWidth(Component text) {
+        return textRenderer.width(text);
     }
 
 }

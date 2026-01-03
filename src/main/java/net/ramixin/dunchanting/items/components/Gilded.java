@@ -1,14 +1,14 @@
 package net.ramixin.dunchanting.items.components;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.minecraft.registry.entry.RegistryEntry;
+import net.minecraft.core.Holder;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.world.item.enchantment.Enchantment;
 
-public record Gilded(RegistryEntry<Enchantment> enchantmentEntry) {
+public record Gilded(Holder<Enchantment> enchantmentEntry) {
 
-    public static final Codec<Gilded> CODEC = Enchantment.ENTRY_CODEC.xmap(Gilded::new, Gilded::enchantmentEntry);
-    public static final PacketCodec<RegistryByteBuf, Gilded> PACKET_CODEC = Enchantment.ENTRY_PACKET_CODEC.xmap(Gilded::new, Gilded::enchantmentEntry);
+    public static final Codec<Gilded> CODEC = Enchantment.CODEC.xmap(Gilded::new, Gilded::enchantmentEntry);
+    public static final StreamCodec<RegistryFriendlyByteBuf, Gilded> PACKET_CODEC = Enchantment.STREAM_CODEC.map(Gilded::new, Gilded::enchantmentEntry);
 
 }

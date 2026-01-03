@@ -1,4 +1,4 @@
-accessWidener v2 named
-accessible class net/minecraft/screen/slot/ArmorSlot
-accessible method net/minecraft/component/type/ItemEnchantmentsComponent getTooltipOrderList (Lnet/minecraft/registry/RegistryWrapper$WrapperLookup;Lnet/minecraft/registry/RegistryKey;Lnet/minecraft/registry/tag/TagKey;)Lnet/minecraft/registry/entry/RegistryEntryList;
-accessible class net/minecraft/client/render/VertexConsumers$Dual
+accessWidener	v2	named
+accessible	class	net/minecraft/world/inventory/ArmorSlot
+accessible	method	net/minecraft/world/item/enchantment/ItemEnchantments	getTagOrEmpty	(Lnet/minecraft/core/HolderLookup$Provider;Lnet/minecraft/resources/ResourceKey;Lnet/minecraft/tags/TagKey;)Lnet/minecraft/core/HolderSet;
+accessible	class	com/mojang/blaze3d/vertex/VertexMultiConsumer$Double

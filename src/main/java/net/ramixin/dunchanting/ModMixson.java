@@ -3,17 +3,18 @@ package net.ramixin.dunchanting;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.minecraft.resources.Identifier;
 import net.ramixin.mixson.inline.EventContext;
 import net.ramixin.mixson.inline.Mixson;
 import net.ramixin.mixson.inline.MixsonCodecs;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+import java.util.Optional;
 
 public class ModMixson {
 
     private static final JsonObject CHANCE_REQUIREMENT;
-    private static final JsonObject LEVELED_CHANCE_SILK_TOUCH = buildLeveledChancePredicate("minecraft:silk_touch");
+    private static final JsonObject LEVELED_CHANCE_SILK_TOUCH_PREDICATE = buildLeveledChancePredicate("minecraft:silk_touch");
 
     static {
 
@@ -35,12 +36,14 @@ public class ModMixson {
                     JsonObject file = context.getFile().getAsJsonObject();
                     boolean hasCompat;
                     //Apply compats
-                    if(file.has("dunchanting:compats")) {
+                    if(file.has("!dunchanting:compats")) {
                         hasCompat = true;
+                        JsonObject compats = file.getAsJsonObject("!dunchanting:compats");
                         JsonObject effects = file.getAsJsonObject("effects");
-                        for(Map.Entry<String, JsonElement> entry : effects.entrySet()) {
+                        for(Map.Entry<String, JsonElement> entry : compats.entrySet()) {
                             if(entry.getKey().equals("!dunchanting:remove"))
-                                for(JsonElement effect : entry.getValue().getAsJsonArray()) effects.remove(effect.getAsString());
+                                for(JsonElement effect : entry.getValue().getAsJsonArray())
+                                    effects.remove(effect.getAsString());
                             else
                                 effects.add(entry.getKey(), entry.getValue());
                         }
@@ -61,36 +64,7 @@ public class ModMixson {
                 Mixson.DEFAULT_PRIORITY,
                 id -> id.getPath().startsWith("loot_table/blocks/"),
                 "AddLevelingToSilkTouch",
-                context -> {
-                    JsonArray pools = context.getFile().getAsJsonObject().getAsJsonArray("pools");
-                    if(pools == null) return;
-                    for (JsonElement pool : pools) {
-                        JsonObject poolObject = pool.getAsJsonObject();
-
-                        if(poolObject.has("conditions")) {
-                            JsonArray conditions = poolObject.getAsJsonArray("conditions");
-                            JsonObject matchToolPredicates = containsSilkTouchCondition(conditions);
-                            if(matchToolPredicates != null) matchToolPredicates.add(Dunchanting.idString("leveled_chance"), LEVELED_CHANCE_SILK_TOUCH);
-                        }
-
-                        JsonArray entries = poolObject.getAsJsonArray("entries");
-                        for(JsonElement entry : entries) {
-                            JsonObject entryObject = entry.getAsJsonObject();
-                            if(!entryObject.has("type")) continue;
-                            if(!entryObject.get("type").getAsString().equals("minecraft:alternatives")) continue;
-                            JsonArray children = entryObject.getAsJsonArray("children");
-                            for (JsonElement child : children) {
-                                JsonObject childObject = child.getAsJsonObject();
-                                if(!childObject.has("conditions")) continue;
-                                JsonArray conditions = childObject.getAsJsonArray("conditions");
-                                JsonObject matchToolPredicates = containsSilkTouchCondition(conditions);
-                                if(matchToolPredicates == null) continue;
-                                matchToolPredicates.add(Dunchanting.idString("leveled_chance"), LEVELED_CHANCE_SILK_TOUCH);
-
-                            }
-                        }
-                    }
-                },
+                ModMixson::addLevelingToSilkTouch,
                 true
         );
 
@@ -109,7 +83,9 @@ public class ModMixson {
                 true
         );
 
-
+        addGildingToLootTable("minecraft:loot_table/chests/bastion_treasure", 0.35f);
+        addGildingToLootTable("minecraft:loot_table/chests/trial_chambers/reward_rare", 0.15f);
+        addGildingToLootTable("minecraft:loot_table/chests/trial_chambers/reward_ominous_rare", 0.2f);
 
         modifyValueEffect("mending", "minecraft:repair_with_xp", 1, 0.5);
         modifyValueEffect("sharpness", "minecraft:damage", 1, 1);
@@ -144,8 +120,76 @@ public class ModMixson {
         modifyValueEffect("multishot", "minecraft:projectile_spread", 10, 0);
     }
 
+     private static void addLevelingToSilkTouch(EventContext<JsonElement> context) {
+         JsonArray pools = context.getFile().getAsJsonObject().getAsJsonArray("pools");
+         if(pools == null) return;
+         for (JsonElement pool : pools) {
+             JsonObject poolObject = pool.getAsJsonObject();
 
-    private static @Nullable JsonObject containsSilkTouchCondition(JsonArray conditions) {
+             if(poolObject.has("conditions")) {
+                 JsonArray conditions = poolObject.getAsJsonArray("conditions");
+                 Optional<JsonObject> maybePredicates = getSilkTouchCondition(conditions);
+                 maybePredicates.ifPresent(jsonObject -> jsonObject.add(Dunchanting.idString("leveled_chance"), LEVELED_CHANCE_SILK_TOUCH_PREDICATE));
+             }
+
+             JsonArray entries = poolObject.getAsJsonArray("entries");
+             for(JsonElement entry : entries) {
+                 JsonObject entryObject = entry.getAsJsonObject();
+                 if(!entryObject.has("type")) continue;
+                 if(!entryObject.get("type").getAsString().equals("minecraft:alternatives")) continue;
+                 JsonArray children = entryObject.getAsJsonArray("children");
+                 for (JsonElement child : children) {
+                     JsonObject childObject = child.getAsJsonObject();
+                     if(!childObject.has("conditions")) continue;
+                     JsonArray conditions = childObject.getAsJsonArray("conditions");
+                     Optional<JsonObject> maybePredicate = getSilkTouchCondition(conditions);
+                     if(maybePredicate.isEmpty()) continue;
+                     maybePredicate.get().add(Dunchanting.idString("leveled_chance"), LEVELED_CHANCE_SILK_TOUCH_PREDICATE);
+
+                 }
+             }
+         }
+    }
+
+    private static void addGildingToLootTable(String lootTableId, float chance) {
+        Mixson.registerEvent(
+                Mixson.DEFAULT_PRIORITY,
+                id -> id.equals(Identifier.parse(lootTableId)),
+                "AddGildingToLootTable "+lootTableId,
+                context -> {
+                    JsonObject file = context.getFile().getAsJsonObject();
+                    JsonArray pools = file.getAsJsonArray("pools");
+                    for(JsonElement pool : pools) {
+                        JsonArray entries = pool.getAsJsonObject().getAsJsonArray("entries");
+                        if(entries == null) continue;
+                        for(JsonElement entry : entries) {
+
+                            boolean isEnchanted = false;
+                            JsonArray functions = entry.getAsJsonObject().getAsJsonArray("functions");
+                            if(functions == null) continue;
+                            for(JsonElement funcElement : functions) {
+                                JsonObject func = funcElement.getAsJsonObject();
+                                String funcName = func.get("function").getAsString();
+                                if(funcName.equals("minecraft:enchant_randomly") || funcName.equals("minecraft:enchant_with_levels"))
+                                    isEnchanted = true;
+                            }
+                            if(isEnchanted) {
+                                JsonObject gildedFunction = new JsonObject();
+                                gildedFunction.addProperty("function", "dunchanting:gild");
+                                JsonObject chanceObject = new JsonObject();
+                                chanceObject.addProperty("value", chance);
+                                gildedFunction.add("chance", chanceObject);
+                                functions.add(gildedFunction);
+                            }
+                        }
+                    }
+                    Dunchanting.LOGGER.info("{}", context.getFile());
+                },
+                true
+        );
+    }
+
+    private static Optional<JsonObject> getSilkTouchCondition(JsonArray conditions) {
         for (JsonElement condition : conditions) {
             JsonObject conditionObject = condition.getAsJsonObject();
             if(!conditionObject.get("condition").getAsString().equals("minecraft:match_tool")) continue;
@@ -156,10 +200,10 @@ public class ModMixson {
             JsonArray enchantments = predicates.getAsJsonArray("minecraft:enchantments");
             for (JsonElement enchantment : enchantments) {
                 JsonObject enchantmentObject = enchantment.getAsJsonObject();
-                if(enchantmentObject.get("enchantments").getAsString().equals("minecraft:silk_touch")) return predicates;
+                if(enchantmentObject.get("enchantments").getAsString().equals("minecraft:silk_touch")) return Optional.of(predicates);
             }
         }
-        return null;
+        return Optional.empty();
     }
 
     private static void replaceUnitEffect(String unitEffect, String newUnitEffect) {

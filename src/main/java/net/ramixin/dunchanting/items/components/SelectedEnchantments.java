@@ -1,21 +1,32 @@
 package net.ramixin.dunchanting.items.components;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
-import net.ramixin.dunchanting.util.ModUtils;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 
 public record SelectedEnchantments(Optional<Integer> first, Optional<Integer> second, Optional<Integer> third) {
 
     public static final Codec<SelectedEnchantments> CODEC = Codec.intRange(-1,2).listOf().xmap(
-            list -> ModUtils.decodeGenericTripleOptionalList(list.iterator(), SelectedEnchantments::new, integer -> integer == -1),
-            option -> ModUtils.encodeGenericTripleOptionalList(option::getOptional, -1)
+            list -> {
+                Iterator<Integer> iter = list.iterator();
+                Optional<Integer> first = Optional.ofNullable(iter.hasNext() && iter.next() == -1 ? null : list.getFirst());
+                Optional<Integer> second = Optional.ofNullable(iter.hasNext() && iter.next() == -1 ? null : list.get(1));
+                Optional<Integer> third = Optional.ofNullable(iter.hasNext() && iter.next() == -1 ? null : list.get(2));
+                return new SelectedEnchantments(first, second, third);
+            },
+            option -> List.of(
+                    option.getOptional(0).orElse(-1),
+                    option.getOptional(1).orElse(-1),
+                    option.getOptional(2).orElse(-1)
+            )
     );
 
-    public static final PacketCodec<RegistryByteBuf, SelectedEnchantments> PACKET_CODEC = PacketCodec.of(SelectedEnchantments::encode, SelectedEnchantments::decode);
+    public static final StreamCodec<RegistryFriendlyByteBuf, SelectedEnchantments> PACKET_CODEC = StreamCodec.ofMember(SelectedEnchantments::encode, SelectedEnchantments::decode);
 
     public static final SelectedEnchantments DEFAULT = new SelectedEnchantments(Optional.empty(), Optional.empty(), Optional.empty());
 
@@ -58,7 +69,7 @@ public record SelectedEnchantments(Optional<Integer> first, Optional<Integer> se
         };
     }
 
-    private static void encode(SelectedEnchantments value, RegistryByteBuf buf) {
+    private static void encode(SelectedEnchantments value, RegistryFriendlyByteBuf buf) {
         for(int i = 0; i < 3; i++) {
             Optional<Integer> optional = value.getOptional(i);
             buf.writeBoolean(optional.isPresent());
@@ -66,7 +77,7 @@ public record SelectedEnchantments(Optional<Integer> first, Optional<Integer> se
         }
     }
 
-    private static SelectedEnchantments decode(RegistryByteBuf buf) {
+    private static SelectedEnchantments decode(RegistryFriendlyByteBuf buf) {
         Integer[] enchants = new Integer[3];
         for(int i = 0; i < 3; i++) {
             if(!buf.readBoolean()) continue;

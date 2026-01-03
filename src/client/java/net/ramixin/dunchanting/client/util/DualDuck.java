@@ -1,6 +1,6 @@
 package net.ramixin.dunchanting.client.util;
 
-import net.minecraft.client.render.VertexConsumer;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 
 public interface DualDuck {
 

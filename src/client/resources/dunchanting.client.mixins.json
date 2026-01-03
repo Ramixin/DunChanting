@@ -3,19 +3,20 @@
   "package": "net.ramixin.dunchanting.client.mixins",
   "compatibilityLevel": "JAVA_21",
   "client": [
+    "AbstractContainerScreenMixin",
     "AnvilScreenMixin",
     "AtlasManagerMixin",
-    "BarMixin",
-    "DrawContentMixin",
-    "ElementMixin",
+    "ContextualBarRendererMixin",
     "EnchantmentScreenMixin",
-    "HandledScreenMixin",
-    "gilded.BasicItemModelMixin",
-    "gilded.BufferBuilderStorageMixin",
-    "gilded.DualMixin",
-    "gilded.EquipmentRendererMixin",
+    "GuiEventListenerMixin",
+    "GuiGraphicsMixin",
+    "RenderTypeAccessor",
+    "gilded.BlockModelWrapperMixin",
+    "gilded.DoubleMixin",
+    "gilded.EquipmentLayerRendererMixin",
     "gilded.ItemRendererMixin",
-    "gilded.WorldRendererMixin"
+    "gilded.LevelRendererMixin",
+    "gilded.RenderBuffersMixin"
   ],
   "injectors": {
     "defaultRequire": 1

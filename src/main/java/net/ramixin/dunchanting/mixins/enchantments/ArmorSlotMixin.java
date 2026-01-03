@@ -2,16 +2,14 @@ package net.ramixin.dunchanting.mixins.enchantments;
 
 import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
-import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.component.ComponentType;
-import net.minecraft.entity.LivingEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.ItemStack;
-import net.minecraft.screen.slot.ArmorSlot;
+import net.minecraft.core.component.DataComponentType;
 import net.minecraft.util.Unit;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.inventory.ArmorSlot;
+import net.minecraft.world.item.ItemStack;
 import net.ramixin.dunchanting.enchantments.ModEnchantmentEffects;
-import net.ramixin.dunchanting.items.components.ModItemComponents;
-import net.ramixin.dunchanting.util.ModUtils;
+import net.ramixin.dunchanting.items.components.ModDataComponents;
+import net.ramixin.dunchanting.util.ModUtil;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
@@ -22,20 +20,20 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 @Mixin(ArmorSlot.class)
 public class ArmorSlotMixin {
 
-    @Shadow @Final private LivingEntity entity;
+    @Shadow @Final private LivingEntity owner;
 
-    @Inject(method = "setStack", at = @At("HEAD"))
+    @Inject(method = "setByPlayer", at = @At("HEAD"))
     private void addBoundComponentIfHasBinding(ItemStack stack, ItemStack previousStack, CallbackInfo ci) {
-        if(ModUtils.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_ARMOR_CHANGE, this.entity.getEntityWorld(), stack))
-            stack.set(ModItemComponents.BOUND, Unit.INSTANCE);
+        if(ModUtil.getLeveledEnchantmentEffectValue(ModEnchantmentEffects.LEVELED_PREVENT_ARMOR_CHANGE, this.owner.level(), stack))
+            stack.set(ModDataComponents.BOUND, Unit.INSTANCE);
         else
-            stack.remove(ModItemComponents.BOUND);
+            stack.remove(ModDataComponents.BOUND);
     }
 
-    @WrapOperation(method = "canTakeItems", at = @At(value = "INVOKE", target = "Lnet/minecraft/enchantment/EnchantmentHelper;hasAnyEnchantmentsWith(Lnet/minecraft/item/ItemStack;Lnet/minecraft/component/ComponentType;)Z"))
-    private boolean applyLeveledBindingCurse(ItemStack stack, ComponentType<?> componentType, Operation<Boolean> original, @Local(argsOnly = true) PlayerEntity player) {
+    @WrapOperation(method = "mayPickup", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/enchantment/EnchantmentHelper;has(Lnet/minecraft/world/item/ItemStack;Lnet/minecraft/core/component/DataComponentType;)Z"))
+    private boolean applyLeveledBindingCurse(ItemStack stack, DataComponentType<?> componentType, Operation<Boolean> original) {
         boolean val = original.call(stack, componentType);
-        return val | stack.contains(ModItemComponents.BOUND);
+        return val | stack.has(ModDataComponents.BOUND);
     }
 
 }

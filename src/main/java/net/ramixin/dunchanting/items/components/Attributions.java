@@ -1,8 +1,8 @@
 package net.ramixin.dunchanting.items.components;
 
 import com.mojang.serialization.Codec;
-import net.minecraft.network.RegistryByteBuf;
-import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,13 +15,13 @@ public record Attributions(List<AttributionEntry> first, List<AttributionEntry> 
             attributions -> List.of(attributions.first, attributions.second, attributions.third, attributions.persistent)
     );
 
-    public static final PacketCodec<RegistryByteBuf, Attributions> PACKET_CODEC = PacketCodec.of(Attributions::write, Attributions::read);
+    public static final StreamCodec<RegistryFriendlyByteBuf, Attributions> PACKET_CODEC = StreamCodec.ofMember(Attributions::write, Attributions::read);
 
-    public static Attributions createNew() {
-        return new Attributions(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
+    public Attributions() {
+        this(new ArrayList<>(), new ArrayList<>(), new ArrayList<>(), new ArrayList<>());
     }
 
-    public static Attributions read(RegistryByteBuf buf) {
+    public static Attributions read(RegistryFriendlyByteBuf buf) {
         List<List<AttributionEntry>> entries = new ArrayList<>();
         for(int i = 0; i < 4; i++) {
             int size = buf.readInt();
@@ -32,7 +32,7 @@ public record Attributions(List<AttributionEntry> first, List<AttributionEntry> 
         return new Attributions(entries.get(0), entries.get(1), entries.get(2), entries.get(3));
     }
 
-    public static void write(Attributions attributions, RegistryByteBuf buf) {
+    public static void write(Attributions attributions, RegistryFriendlyByteBuf buf) {
         for(int i = 0; i < 4; i++) {
             List<AttributionEntry> entries;
             if(i == 3) entries = attributions.persistent();

@@ -1,12 +1,12 @@
 package net.ramixin.dunchanting.client.enchantmentui.anvil;
 
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.Holder;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchanting.client.util.ModClientUtils;
@@ -15,7 +15,7 @@ import net.ramixin.dunchanting.items.components.EnchantmentOptions;
 import net.ramixin.dunchanting.items.components.EnchantmentSlot;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModTags;
-import net.ramixin.dunchanting.util.ModUtils;
+import net.ramixin.dunchanting.util.ModUtil;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,30 +28,31 @@ public class TransferHoverManager extends AbstractUIHoverManager {
     private int activeHoverOption = -1;
 
     @Override
-    public void render(AbstractEnchantmentUIElement element, ItemStack stack, DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY, int relX, int relY) {
+    public void render(AbstractEnchantmentUIElement element, ItemStack stack, GuiGraphics context, Font textRenderer, int mouseX, int mouseY, int relX, int relY) {
         if(activeHoverOption == -1 || !(element instanceof TransferElement transferElement)) return;
+        //noinspection DuplicatedCode
         int optionIndex = activeHoverOption % 3;
         int index = activeHoverOption / 3;
         EnchantmentOptions options = element.getEnchantmentOptions();
-        if(options.isLocked(index)) return;
+        if(options.hasEmptySlot(index)) return;
         EnchantmentSlot option = options.getOrThrow(index);
         if(option.isLocked(optionIndex)) return;
-        RegistryEntry<Enchantment> enchant = option.getOrThrow(optionIndex);
+        Holder<Enchantment> enchant = option.getOrThrow(optionIndex);
         if(enchant == null) return;
-        int enchantLevel = ModUtils.getEnchantmentLevel(enchant, stack);
-        boolean powerful = enchant.isIn(ModTags.POWERFUL_ENCHANTMENT);
+        int enchantLevel = ModUtil.getEnchantmentLevel(enchant, stack);
+        boolean powerful = enchant.is(ModTags.POWERFUL_ENCHANTMENT);
         TooltipRenderer renderer = new TooltipRenderer(context, textRenderer, mouseX, mouseY);
         if(ModClientUtils.markAsUnavailable(element, activeHoverOption, enchant)) {
             renderUnavailableTooltip(enchant, powerful, renderer);
             return;
         }
-        renderer.render(List.of(Text.translatable("container.anvil.replacing").formatted(Formatting.RED)), 0, 0);
+        renderer.render(List.of(Component.translatable("container.anvil.replacing").withStyle(ChatFormatting.RED)), 0, 0);
         renderInfoTooltip(enchant, powerful, enchantLevel, renderer, true, false, false, false, false, false, false);
         renderer.resetHeight();
 
-        RegistryEntry<Enchantment> transferSelection = transferElement.getTransferSelection();
-        boolean transferPowerful = transferSelection.isIn(ModTags.POWERFUL_ENCHANTMENT);
-        renderer.render(List.of(Text.translatable("container.anvil.transferring").formatted(Formatting.GREEN)), - 30 - 68, 0);
+        Holder<Enchantment> transferSelection = transferElement.getTransferSelection();
+        boolean transferPowerful = transferSelection.is(ModTags.POWERFUL_ENCHANTMENT);
+        renderer.render(List.of(Component.translatable("container.anvil.transferring").withStyle(ChatFormatting.GREEN)), - 30 - 68, 0);
         renderInfoTooltip(transferSelection, transferPowerful, 1, renderer, true, false, false, true, false, false, false);
     }
 

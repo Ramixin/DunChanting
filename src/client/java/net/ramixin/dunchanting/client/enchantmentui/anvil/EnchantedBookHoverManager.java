@@ -1,14 +1,14 @@
 package net.ramixin.dunchanting.client.enchantmentui.anvil;
 
 import net.fabricmc.fabric.api.item.v1.EnchantingContext;
-import net.minecraft.client.font.TextRenderer;
-import net.minecraft.client.gui.DrawContext;
-import net.minecraft.enchantment.Enchantment;
-import net.minecraft.item.ItemStack;
-import net.minecraft.registry.entry.RegistryEntry;
-import net.minecraft.text.Text;
-import net.minecraft.util.Formatting;
-import net.minecraft.util.Language;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.Font;
+import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.core.Holder;
+import net.minecraft.locale.Language;
+import net.minecraft.network.chat.Component;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.enchantment.Enchantment;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractEnchantmentUIElement;
 import net.ramixin.dunchanting.client.enchantmentui.AbstractUIHoverManager;
 import net.ramixin.dunchanting.client.util.ModClientUtils;
@@ -17,7 +17,7 @@ import net.ramixin.dunchanting.items.components.EnchantmentOptions;
 import net.ramixin.dunchanting.items.components.EnchantmentSlot;
 import net.ramixin.dunchanting.items.components.SelectedEnchantments;
 import net.ramixin.dunchanting.util.ModTags;
-import net.ramixin.dunchanting.util.ModUtils;
+import net.ramixin.dunchanting.util.ModUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,17 +31,17 @@ public class EnchantedBookHoverManager extends AbstractUIHoverManager {
     private int activeHoverOption = -1;
 
     @Override
-    public void render(AbstractEnchantmentUIElement element, ItemStack stack, DrawContext context, TextRenderer textRenderer, int mouseX, int mouseY, int relX, int relY) {
+    public void render(AbstractEnchantmentUIElement element, ItemStack stack, GuiGraphics context, Font textRenderer, int mouseX, int mouseY, int relX, int relY) {
         if(activeHoverOption == -1 || !(element instanceof EnchantedBookElement enchantedBookElement)) return;
         int optionIndex = activeHoverOption % 3;
         int index = activeHoverOption / 3;
         EnchantmentOptions options = element.getEnchantmentOptions();
-        if(options.isLocked(index)) return;
+        if(options.hasEmptySlot(index)) return;
         EnchantmentSlot option = options.getOrThrow(index);
         if(option.isLocked(optionIndex)) return;
-        RegistryEntry<Enchantment> enchant = option.getOrThrow(optionIndex);
-        int enchantLevel = ModUtils.getEnchantmentLevel(enchant, stack);
-        boolean powerful = enchant.isIn(ModTags.POWERFUL_ENCHANTMENT);
+        Holder<Enchantment> enchant = option.getOrThrow(optionIndex);
+        int enchantLevel = ModUtil.getEnchantmentLevel(enchant, stack);
+        boolean powerful = enchant.is(ModTags.POWERFUL_ENCHANTMENT);
         TooltipRenderer renderer = new TooltipRenderer(context, textRenderer, mouseX, mouseY);
         if(ModClientUtils.markAsUnavailable(element, activeHoverOption, enchant)) {
             renderUnavailableTooltip(enchant, powerful, renderer);
@@ -52,16 +52,16 @@ public class EnchantedBookHoverManager extends AbstractUIHoverManager {
 
         ItemStack primary = enchantedBookElement.getEnchantableStack();
         if(primary.canBeEnchantedWith(enchant, EnchantingContext.ACCEPTABLE)) {
-            String clickText = Language.getInstance().get("container.anvil.transfer");
-            List<String> rawClickText = ModUtils.textWrapString(clickText, 20);
-            List<Text> finalClickText = new ArrayList<>();
-            int clickWidth = ModUtils.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, Formatting.BLUE);
+            String clickText = Language.getInstance().getOrDefault("container.anvil.transfer");
+            List<String> rawClickText = ModUtil.textWrapString(clickText, 20);
+            List<Component> finalClickText = new ArrayList<>();
+            int clickWidth = ModUtil.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, ChatFormatting.BLUE);
             renderer.render(finalClickText, -30 - clickWidth, 0);
         } else {
-            String clickText = Language.getInstance().get("container.anvil.unsupported");
-            List<String> rawClickText = ModUtils.textWrapString(clickText, 20);
-            List<Text> finalClickText = new ArrayList<>();
-            int clickWidth = ModUtils.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, Formatting.RED);
+            String clickText = Language.getInstance().getOrDefault("container.anvil.unsupported");
+            List<String> rawClickText = ModUtil.textWrapString(clickText, 20);
+            List<Component> finalClickText = new ArrayList<>();
+            int clickWidth = ModUtil.convertStringListToText(rawClickText, finalClickText, renderer::getTextWidth, ChatFormatting.RED);
             renderer.render(finalClickText, -30 - clickWidth, 0);
         }
 
@@ -96,17 +96,5 @@ public class EnchantedBookHoverManager extends AbstractUIHoverManager {
     @Override
     public void cancelActiveHover() {
         activeHoverOption = -1;
-    }
-
-    public boolean supports(AbstractEnchantmentUIElement element, ItemStack primary, int hoverIndex) {
-        if(hoverIndex == -1) return false;
-        int optionIndex = hoverIndex % 3;
-        int index = hoverIndex / 3;
-        EnchantmentOptions options = element.getEnchantmentOptions();
-        if(options.isLocked(index)) return false;
-        EnchantmentSlot option = options.getOrThrow(index);
-        if(option.isLocked(optionIndex)) return false;
-        RegistryEntry<Enchantment> enchant = option.getOrThrow(optionIndex);
-        return primary.canBeEnchantedWith(enchant, EnchantingContext.ACCEPTABLE);
     }
 }
