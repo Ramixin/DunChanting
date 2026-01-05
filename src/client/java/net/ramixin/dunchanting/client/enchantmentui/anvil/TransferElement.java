@@ -18,7 +18,7 @@ public class TransferElement extends AbstractEnchantmentUIElement {
     public TransferElement(ItemStack stack, ItemStack book, int transferSelection, AbstractUIHoverManager hoverManager, int relX, int relY) {
         super(stack, hoverManager, relX, relY);
         this.transferIndex = transferSelection;
-        List<Holder<Enchantment>> orderedEnchantments = ModUtil.getOrderedEnchantments(book);
+        List<Holder<Enchantment>> orderedEnchantments = ModUtil.getStoredEnchants(book);
         this.transferSelection = orderedEnchantments.get(transferSelection / 3);
         this.bookStack = book;
     }

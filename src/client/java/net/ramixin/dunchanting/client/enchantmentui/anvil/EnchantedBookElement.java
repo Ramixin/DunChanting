@@ -40,7 +40,7 @@ public class EnchantedBookElement extends AbstractEnchantmentUIElement {
 
     @Override
     protected EnchantmentOptions retrieveOptions(ItemStack stack) {
-        List<Holder<Enchantment>> orderedEnchants = ModUtil.getOrderedEnchantments(stack);
+        List<Holder<Enchantment>> orderedEnchants = ModUtil.getStoredEnchants(stack);
         EnchantmentSlot[] options = new EnchantmentSlot[3];
         for(int i = 0; i < Math.min(orderedEnchants.size(), 3); i++) {
             Holder<Enchantment> enchant = orderedEnchants.get(i);

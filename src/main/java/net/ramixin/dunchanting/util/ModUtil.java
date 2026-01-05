@@ -1,7 +1,6 @@
 package net.ramixin.dunchanting.util;
 
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.ObjectIterator;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayNetworking;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
@@ -197,12 +196,9 @@ public interface ModUtil {
         return count;
     }
 
-    static List<Holder<Enchantment>> getOrderedEnchantments(ItemStack stack) {
+    static List<Holder<Enchantment>> getStoredEnchants(ItemStack stack) {
         ItemEnchantments storedEnchantments = stack.getOrDefault(DataComponents.STORED_ENCHANTMENTS, ItemEnchantments.EMPTY);
-        ObjectIterator<Object2IntMap.Entry<Holder<Enchantment>>> enchantmentsIterator = ItemEnchantmentsDuck.get(storedEnchantments).dungeonEnchants$getEnchantments().object2IntEntrySet().iterator();
-        List<Holder<Enchantment>> orderedList = new ArrayList<>();
-        enchantmentsIterator.forEachRemaining(v -> orderedList.add(v.getKey()));
-        return orderedList;
+        return new ArrayList<>(storedEnchantments.keySet().stream().sorted().toList());
     }
 
 }

@@ -95,7 +95,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu implements Clickab
                 ci.cancel();
                 return;
             }
-            List<Holder<Enchantment>> orderedEnchantments = ModUtil.getOrderedEnchantments(secondary);
+            List<Holder<Enchantment>> orderedEnchantments = ModUtil.getStoredEnchants(secondary);
             Holder<Enchantment> replacement = orderedEnchantments.get(replacementEnchantment / 3);
             EnchantmentOptions newOptions = options.withEnchantment(replacement, replacingEnchantment / 3, replacingEnchantment % 3);
             copy.set(ModDataComponents.UNLOCKED_ENCHANTMENT_OPTIONS, newOptions);
@@ -135,7 +135,7 @@ public abstract class AnvilMenuMixin extends ItemCombinerMenu implements Clickab
             original.call(instance, i, stack);
             return;
         }
-        List<Holder<Enchantment>> orderedEnchantments = ModUtil.getOrderedEnchantments(stack);
+        List<Holder<Enchantment>> orderedEnchantments = ModUtil.getStoredEnchants(stack);
         Holder<Enchantment> enchantmentEntry = orderedEnchantments.get(replacementEnchantment / 3);
         int level = enchantments.getLevel(enchantmentEntry);
         ItemEnchantments.Mutable builder = new ItemEnchantments.Mutable(enchantments);

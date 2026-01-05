@@ -83,9 +83,12 @@ public class ModMixson {
                 true
         );
 
-        addGildingToLootTable("minecraft:loot_table/chests/bastion_treasure", 0.35f);
-        addGildingToLootTable("minecraft:loot_table/chests/trial_chambers/reward_rare", 0.15f);
-        addGildingToLootTable("minecraft:loot_table/chests/trial_chambers/reward_ominous_rare", 0.2f);
+        addGildingToLootTable("minecraft:loot_table/chests/bastion_treasure", 0.60f);
+        addGildingToLootTable("minecraft:loot_table/chests/bastion_hoglin_stable", 0.75f);
+        addGildingToLootTable("minecraft:loot_table/chests/bastion_other", 0.75f);
+        addGildingToLootTable("minecraft:loot_table/chests/bastion_bridge", 0.75f);
+        addGildingToLootTable("minecraft:loot_table/chests/trial_chambers/reward_rare", 0.20f);
+        addGildingToLootTable("minecraft:loot_table/chests/trial_chambers/reward_ominous_rare", 0.25f);
 
         modifyValueEffect("mending", "minecraft:repair_with_xp", 1, 0.5);
         modifyValueEffect("sharpness", "minecraft:damage", 1, 1);
@@ -183,7 +186,6 @@ public class ModMixson {
                             }
                         }
                     }
-                    Dunchanting.LOGGER.info("{}", context.getFile());
                 },
                 true
         );
